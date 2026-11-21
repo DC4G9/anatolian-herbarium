@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Keep imported markup and React-controlled interactions in the content route, with source styles and inventory separate, to preserve capture fidelity without a DOM-repair runtime.
+- Generate QR matrices with the browser-safe source library and render them in React so plant links always target the current site.

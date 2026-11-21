@@ -1,0 +1,7 @@
+[
+ {"capability":"code","source":"code archive (Lovable TanStack project)","outcome":"migrate","status":"done","next_action":"none"},
+ {"capability":"static data (herbarium JSON, province map)","source":"src/lib/*.json","outcome":"migrate","status":"done","next_action":"none"},
+ {"capability":"database/auth/records","source":"none detected","outcome":"not applicable","status":"verified","next_action":"none"},
+ {"capability":"secrets/integrations","source":"none detected","outcome":"not applicable","status":"verified","next_action":"none"},
+ {"capability":"capture artifacts (.site-import)","source":"archive","outcome":"excluded (dev reference only, 21MB)","status":"accepted","next_action":"none"}
+]
