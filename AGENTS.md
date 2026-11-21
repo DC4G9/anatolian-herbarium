@@ -31,3 +31,5 @@ use the editor.
 
 - Keep imported markup and React-controlled interactions in the content route, with source styles and inventory separate, to preserve capture fidelity without a DOM-repair runtime.
 - Generate QR matrices with the browser-safe source library and render them in React so plant links always target the current site.
+
+- Plant photos live as files in public/plant-photos/ (mapped by src/lib/herbarium-media.json), not Lovable CDN assets: the site is deployed on Vercel, where /__l5e/ asset paths do not resolve.

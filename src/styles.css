@@ -564,3 +564,10 @@ html.eh-scroll-ready [data-scroll-reveal].is-revealed { opacity:1; translate:0 0
   .name-story-card, .region-intro, .qr-card, .game-card, .game-btn, .game-chip, .game-back, .pan-center,
   .province-button, .drawer-plant { transition:none; }
 }
+
+/* Conservation level bar */
+.cons-seg { background-color: hsl(150 12% 88%); }
+.cons-seg--on.cons-seg--l0 { background-color: hsl(152 55% 42%); }
+.cons-seg--on.cons-seg--l1 { background-color: hsl(42 90% 52%); }
+.cons-seg--on.cons-seg--l2 { background-color: hsl(24 88% 52%); }
+.cons-seg--on.cons-seg--l3 { background-color: hsl(0 72% 50%); }

@@ -926,14 +926,14 @@ function ImportedSectionKazdaGKnar() {
               </h4>
               <p className={"\x74ext-lg \x66ont-bold reveal-text"} style={{ "--td": "155ms" } as CSSProperties} id="cons-label">{conservation(plant,state.lang).label}</p>
               <div className={"[&]:relative [padding-top:1rem]"}>
-                <span className={"text-slate-800 \x74ransition-all \x64uration-700 [&]:absolute [top:0px] [transition-property:all] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]"} id="cons-pointer">
+                <span className={"text-slate-800 \x74ransition-all \x64uration-700 [&]:absolute [top:0px] [transition-property:all] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]"} id="cons-pointer" style={{ left: `calc(${(conservation(plant,state.lang).level * 2 + 1) * 12.5}% - 0.3rem)` }}>
                   <i className="fa-solid fa-caret-down" />
                 </span>
                 <div className="grid [gap:0.25rem] [grid-template-columns:repeat(4,minmax(0px,1fr))]" id="cons-bar">
-                  <div className={"h-2.5 \x72ounded-l-full transition-colors \x64uration-700 reveal is-visible"} style={{ "--rd": "0ms" } as CSSProperties} />
-                  <div className={"h-2.5 transition-colors \x64uration-700 reveal is-visible"} style={{ "--rd": "100ms" } as CSSProperties} />
-                  <div className={"h-2.5 transition-colors \x64uration-700 reveal is-visible"} style={{ "--rd": "200ms" } as CSSProperties} />
-                  <div className={"h-2.5 \x72ounded-r-full transition-colors \x64uration-700 reveal is-visible"} style={{ "--rd": "300ms" } as CSSProperties} />
+                  <div className={"h-2.5 \x72ounded-l-full transition-colors \x64uration-700 reveal is-visible cons-seg" + (conservation(plant,state.lang).level >= 0 ? " cons-seg--on cons-seg--l" + conservation(plant,state.lang).level : "")} style={{ "--rd": "0ms" } as CSSProperties} />
+                  <div className={"h-2.5 transition-colors \x64uration-700 reveal is-visible cons-seg" + (conservation(plant,state.lang).level >= 1 ? " cons-seg--on cons-seg--l" + conservation(plant,state.lang).level : "")} style={{ "--rd": "100ms" } as CSSProperties} />
+                  <div className={"h-2.5 transition-colors \x64uration-700 reveal is-visible cons-seg" + (conservation(plant,state.lang).level >= 2 ? " cons-seg--on cons-seg--l" + conservation(plant,state.lang).level : "")} style={{ "--rd": "200ms" } as CSSProperties} />
+                  <div className={"h-2.5 \x72ounded-r-full transition-colors \x64uration-700 reveal is-visible cons-seg" + (conservation(plant,state.lang).level >= 3 ? " cons-seg--on cons-seg--l" + conservation(plant,state.lang).level : "")} style={{ "--rd": "300ms" } as CSSProperties} />
                 </div>
                 <div className={"grid text-[9px] \x66ont-bold text-slate-400 mt-1 [&]:uppercase [grid-template-columns:repeat(4,minmax(0px,1fr))]"}>
                   <span>{tr("cons.lowShort")}</span>
