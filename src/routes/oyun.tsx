@@ -16,12 +16,38 @@ export const Route = createFileRoute("/oyun")({
   component: Game,
 });
 
-type Q = { id: string; name: string; sci: string; province: string; provinceName: string };
+type Language = "tr" | "en";
+type Q = { id: string; name: string; nameEn: string; sci: string; province: string; provinceName: string };
+const englishPlants = inventory.english as Record<string, { name?: string }>;
 const pool: Q[] = (inventory.plants as { id: string; turkishName: string; scientificName: string; provinceId?: string; provinceName?: string }[])
   .filter(p => p.provinceId && (paths as Record<string, unknown>)[p.provinceId])
-  .map(p => ({ id: p.id, name: p.turkishName, sci: p.scientificName, province: p.provinceId!, provinceName: p.provinceName ?? p.provinceId! }));
+  .map(p => ({ id: p.id, name: p.turkishName, nameEn: englishPlants[p.id]?.name ?? p.turkishName, sci: p.scientificName, province: p.provinceId!, provinceName: p.provinceName ?? p.provinceId! }));
 const provincePaths = paths as Record<string, { name: string; d: string }>;
 const BEST_KEY = "etnoherba-best-score";
+const LANG_KEY = "etnoherba-lang";
+
+const copy = {
+  tr: {
+    title: "Bitki Harita Oyunu", back: "Haritaya dön", language: "Dil seçimi",
+    bestTitle: "Bu cihazdaki en yüksek skorun", bestLabel: "En iyi:", soundOn: "Ses açık", soundOff: "Ses kapalı", soundAria: "Ses",
+    intro: `Rastgele bir bitki soracağız; yetiştiği ili haritada bul. İlk denemede doğru cevap yeşil, 2. veya 3. denemede sarı olur. ${MAX_TRIES} yanlış tahminden sonra doğru il gösterilir.`,
+    rules: ["puan ilk denemede", "puan 2. denemede", "puan 3. denemede", "her seri adımı için (en fazla +50)", "5 saniyenin altında bilirsen"],
+    countPrompt: "Kaç soru olsun?", plants: "bitki", questions: "soru", allPlants: "Tüm bitkiler",
+    newRecord: "Yeni rekor", totalScore: "Toplam skor", accuracy: "İsabet", firstTry: "ilk denemede", later: "sonradan", unknown: "bilinemedi", time: "Süre", longestStreak: "En uzun seri",
+    playAgain: "Tekrar oyna", changeCount: "Soru sayısını değiştir", answerReview: "Yanıtlar", question: "Soru", attemptsLeft: "Kalan hak", skip: "Pas geç", correctProvince: "Doğru il", mapAria: "Türkiye illeri haritası",
+    roundDone: "Tur tamamlandı", rankNovice: "Çırak Herbaryumcu", rankExplorer: "Botanik Gezgini", rankExpert: "Herbaryum Uzmanı", rankNaturalist: "Anadolu Etnobotanikçisi",
+  },
+  en: {
+    title: "Plant map game", back: "Back to the map", language: "Language",
+    bestTitle: "Your highest score on this device", bestLabel: "Best:", soundOn: "Sound on", soundOff: "Sound off", soundAria: "Sound",
+    intro: `We’ll show you a plant at random; find its province on the map. A first-try answer turns green, a second- or third-try answer turns yellow. After ${MAX_TRIES} wrong guesses, the correct province is revealed.`,
+    rules: ["points on the first try", "points on the second try", "points on the third try", "for each streak step (up to +50)", "if you answer in under 5 seconds"],
+    countPrompt: "Choose a round size", plants: "plants", questions: "questions", allPlants: "All plants",
+    newRecord: "New record", totalScore: "Total score", accuracy: "Accuracy", firstTry: "first try", later: "after retries", unknown: "not identified", time: "Time", longestStreak: "Longest streak",
+    playAgain: "Play again", changeCount: "Change round size", answerReview: "Answer review", question: "Question", attemptsLeft: "Attempts left", skip: "Skip", correctProvince: "Correct province", mapAria: "Map of the provinces of Türkiye",
+    roundDone: "Round complete", rankNovice: "Herbarium apprentice", rankExplorer: "Botanical explorer", rankExpert: "Herbarium specialist", rankNaturalist: "Anatolian ethnobotanist",
+  },
+};
 
 function beep(kind: "ok" | "bad" | "fail" | "end") {
   try {
@@ -30,11 +56,10 @@ function beep(kind: "ok" | "bad" | "fail" | "end") {
     notes.forEach((f, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = kind === "bad" ? "square" : "sine"; o.frequency.value = f;
       const t = ctx.currentTime + i * 0.12; g.gain.setValueAtTime(kind === "bad" ? 0.06 : 0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18); o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.2); });
     setTimeout(() => ctx.close(), 1200);
-  } catch { /* no audio */ }
+  } catch { /* audio is optional */ }
 }
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-/** Animates a number towards its target (used for the score display). */
 function useCountUp(value: number, ms = 600) {
   const [shown, setShown] = useState(value);
   const from = useRef(value);
@@ -50,6 +75,8 @@ type Fx = { id: number; x: number; y: number; kind: "ok" | "bad"; text: string }
 let fxId = 0;
 
 function Game() {
+  const [lang, setLang] = useState<Language>("tr");
+  const t = copy[lang];
   const [size, setSize] = useState<RoundSize | null>(null);
   const [qs, setQs] = useState<Q[]>([]);
   const [i, setI] = useState(0);
@@ -72,8 +99,15 @@ function Game() {
   const done = size !== null && i >= qs.length;
   const shownScore = useCountUp(score);
 
-  useEffect(() => { try { setBestScore(Number(localStorage.getItem(BEST_KEY)) || 0); } catch { /* private mode */ } }, []);
-  useEffect(() => { if (size === null || done) return; const t = setInterval(() => setSecs(s => s + 1), 1000); return () => clearInterval(t); }, [size, done]);
+  useEffect(() => { document.title = `${lang === "en" ? "Plant map game" : "Bitki Harita Oyunu"} - Etnoherba`; }, [lang]);
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem(LANG_KEY);
+      if (savedLang === "en" || savedLang === "tr") setLang(savedLang);
+      setBestScore(Number(localStorage.getItem(BEST_KEY)) || 0);
+    } catch { /* storage unavailable */ }
+  }, []);
+  useEffect(() => { if (size === null || done) return; const timer = setInterval(() => setSecs(s => s + 1), 1000); return () => clearInterval(timer); }, [size, done]);
   useEffect(() => { qStart.current = performance.now(); }, [i, size]);
   useEffect(() => {
     if (!done || score <= 0) return;
@@ -82,6 +116,7 @@ function Game() {
 
   const q = qs[i];
   const play = (k: Parameters<typeof beep>[0]) => sound && beep(k);
+  const setLanguage = (next: Language) => { setLang(next); try { localStorage.setItem(LANG_KEY, next); } catch { /* storage unavailable */ } };
 
   const burst = (e: MouseEvent | null, kind: Fx["kind"], text: string) => {
     const box = mapRef.current?.getBoundingClientRect(); if (!box) return;
@@ -110,78 +145,85 @@ function Game() {
   const count = (o: Outcome) => Object.values(results).filter(r => r === o).length;
   const accuracy = Math.round(((count("green") + count("yellow") * 0.5) / Math.max(qs.length, 1)) * 100);
   const progress = qs.length ? (Math.min(i, qs.length) / qs.length) * 100 : 0;
-  const rank = rankFor(accuracy);
+  const rank = lang === "en" ? (accuracy >= 90 ? t.rankNaturalist : accuracy >= 70 ? t.rankExpert : accuracy >= 45 ? t.rankExplorer : t.rankNovice) : rankFor(accuracy);
+  const locale = lang === "en" ? "en-US" : "tr-TR";
 
   return (
     <>
-    <HerbBackground />
-    <main className="game">
-      <header className="game-top">
-        <Link to="/" className="game-back">← Haritaya dön</Link>
-        <h1>Bitki Harita Oyunu</h1>
-        <div className="game-top-right">
-          {bestScore > 0 && <span className="game-best" title="Bu cihazdaki en yüksek skorun">En iyi: <b>{bestScore.toLocaleString("tr-TR")}</b></span>}
-          <button className="game-chip" onClick={() => setSound(s => !s)} aria-label="Ses">{sound ? "🔊 Ses açık" : "🔇 Ses kapalı"}</button>
+      <HerbBackground />
+      <main className="game">
+        <header className="game-top">
+          <Link to="/" className="game-back">← {t.back}</Link>
+          <h1>{t.title}</h1>
+          <div className="game-top-right">
+            {bestScore > 0 && <span className="game-best" title={t.bestTitle}>{t.bestLabel} <b>{bestScore.toLocaleString(locale)}</b></span>}
+            <div className={"game-language-toggle" + (lang === "en" ? " is-en" : "")} role="group" aria-label={t.language}>
+              <span className="language-switcher-thumb" aria-hidden="true" />
+              <button type="button" aria-pressed={lang === "tr"} onClick={() => setLanguage("tr")}>TR</button>
+              <button type="button" aria-pressed={lang === "en"} onClick={() => setLanguage("en")}>EN</button>
+            </div>
+            <button className="game-chip" onClick={() => setSound(s => !s)} aria-label={t.soundAria}>{sound ? t.soundOn : t.soundOff}</button>
+          </div>
+        </header>
+
+        {size === null ? (
+          <section className="game-card game-start game-enter">
+            <p>{t.intro}</p>
+            <ul className="game-rules">
+              <li><b>100</b> {t.rules[0]}</li>
+              <li><b>60</b> {t.rules[1]} · <b>30</b> {t.rules[2]}</li>
+              <li><b>+10</b> {t.rules[3]}</li>
+              <li><b>+20</b> {t.rules[4]}</li>
+            </ul>
+            <p>{t.countPrompt} ({pool.length} {t.plants})</p>
+            <div className="game-sizes">{ROUND_SIZES.map(s => <button key={s} className="game-btn" onClick={() => start(s)}>{s === "all" ? `${t.allPlants} (${pool.length})` : `${s} ${t.questions}`}</button>)}</div>
+          </section>
+        ) : done ? (
+          <section className="game-card game-start game-end game-enter">
+            {newRecord && <span className="game-record">{t.newRecord}</span>}
+            <small className="game-label">{t.totalScore}</small>
+            <div className="game-final tabular">{shownScore.toLocaleString(locale)}</div>
+            <p className="game-rank">{rank} · {t.accuracy} {lang === "en" ? `${accuracy}%` : `%${accuracy}`}</p>
+            <div className="game-stats"><span className="t-green">✔ {count("green")} {t.firstTry}</span><span className="t-yellow">● {count("yellow")} {t.later}</span><span className="t-red">✖ {count("red")} {t.unknown}</span><span>⏱ {t.time} {fmt(secs)}</span><span>🔥 {t.longestStreak}: {best}</span></div>
+            <div className="game-sizes"><button className="game-btn" onClick={() => start(size)}>{t.playAgain}</button><button className="game-chip" onClick={() => setSize(null)}>{t.changeCount}</button></div>
+            <h3 className="game-review-heading">{t.answerReview}</h3>
+            <ul className="game-review">{qs.map(x => <li key={x.id} className={`r-${results[x.id]}`}><b>{lang === "en" ? x.nameEn : x.name}</b> — {x.provinceName}</li>)}</ul>
+          </section>
+        ) : q && (
+          <section key={shake} className={"game-card game-q" + (shake ? " game-shake" : "")} aria-live="polite">
+            <div className="game-progress" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
+            <div key={q.id} className="game-q-body">
+              <small>{t.question} {i + 1}/{qs.length} · {t.attemptsLeft} <span className="game-hearts">{Array.from({ length: MAX_TRIES }, (_, k) => <i key={k} className={k < MAX_TRIES - misses ? "on" : ""} />)}</span> · ⏱ {fmt(secs)}</small>
+              <h2>{lang === "en" ? q.nameEn : q.name}</h2><i>{q.sci}</i>
+              {reveal && <p className="t-red">{t.correctProvince}: {q.provinceName}</p>}
+            </div>
+            <div className="game-q-side">
+              <div className="game-score" aria-label={`${t.totalScore}: ${score}`}><small>{t.totalScore}</small><b className="tabular">{shownScore.toLocaleString(locale)}</b></div>
+              {streak >= 2 && <span key={streak} className="game-streak">🔥 x{streak}</span>}
+              <button className="game-chip" onClick={() => { if (!lock.current) { setReveal(q.province); play("fail"); next("red", null, misses); } }}>{t.skip}</button>
+            </div>
+          </section>
+        )}
+
+        <div className="game-map" ref={mapRef}>
+          <svg viewBox="0 0 1566 783" role="img" aria-label={t.mapAria}>
+            <defs>
+              <filter id="g-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+            </defs>
+            {Object.entries(provincePaths).map(([id, p]) => (
+              <path key={id} d={p.d} onClick={e => click(id, e)}
+                className={["prov", colors[id] ? `p-${colors[id]}` : "", wrong.includes(id) && reveal === null ? "p-wrong" : "", reveal === id ? "p-reveal" : "", pop === id ? "p-pop" : ""].join(" ")}>
+                <title>{size === null || done ? p.name : ""}</title>
+              </path>))}
+          </svg>
+          {fx.map(f => (
+            <div key={f.id} className={`game-fx fx-${f.kind}`} style={{ left: f.x, top: f.y }}>
+              <span className="fx-text">{f.text}</span>
+              {f.kind === "ok" && Array.from({ length: 7 }, (_, k) => <i key={k} className="fx-leaf" style={{ "--a": `${k * (360 / 7) + 10}deg` } as CSSProperties} />)}
+            </div>
+          ))}
         </div>
-      </header>
-
-      {size === null ? (
-        <section className="game-card game-start game-enter">
-          <p>Sana rastgele bir bitki soracağız; yetiştiği ili haritada bul. İlk denemede doğruysa <b className="t-green">yeşil</b>, 2. veya 3. denemede <b className="t-yellow">sarı</b>, {MAX_TRIES} yanlışta <b className="t-red">kırmızı</b> yanar ve doğru il gösterilir.</p>
-          <ul className="game-rules">
-            <li><b>100</b> puan ilk denemede</li>
-            <li><b>60 / 30</b> puan 2. / 3. denemede</li>
-            <li><b>+10</b> her seri adımı için (en fazla +50)</li>
-            <li><b>+20</b> 5 saniyenin altında bilirsen</li>
-          </ul>
-          <p>Kaç soru olsun? (Toplam {pool.length} bitki)</p>
-          <div className="game-sizes">{ROUND_SIZES.map(s => <button key={s} className="game-btn" onClick={() => start(s)}>{s === "all" ? `Tüm bitkiler (${pool.length})` : `${s} soru`}</button>)}</div>
-        </section>
-      ) : done ? (
-        <section className="game-card game-start game-end game-enter">
-          {newRecord && <span className="game-record">Yeni rekor</span>}
-          <small className="game-label">Toplam skor</small>
-          <div className="game-final tabular">{shownScore.toLocaleString("tr-TR")}</div>
-          <p className="game-rank">{rank} · İsabet %{accuracy}</p>
-          <div className="game-stats"><span className="t-green">✔ {count("green")} ilk denemede</span><span className="t-yellow">● {count("yellow")} sonradan</span><span className="t-red">✖ {count("red")} bilinemedi</span><span>⏱ {fmt(secs)}</span><span>🔥 En uzun seri: {best}</span></div>
-          <div className="game-sizes"><button className="game-btn" onClick={() => start(size)}>Tekrar oyna</button><button className="game-chip" onClick={() => setSize(null)}>Soru sayısını değiştir</button></div>
-          <ul className="game-review">{qs.map(x => <li key={x.id} className={`r-${results[x.id]}`}><b>{x.name}</b> — {x.provinceName}</li>)}</ul>
-        </section>
-      ) : q && (
-        <section key={shake} className={"game-card game-q" + (shake ? " game-shake" : "")} aria-live="polite">
-          <div className="game-progress" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
-          <div key={q.id} className="game-q-body">
-            <small>Soru {i + 1}/{qs.length} · Kalan hak <span className="game-hearts">{Array.from({ length: MAX_TRIES }, (_, k) => <i key={k} className={k < MAX_TRIES - misses ? "on" : ""} />)}</span> · ⏱ {fmt(secs)}</small>
-            <h2>{q.name}</h2><i>{q.sci}</i>
-            {reveal && <p className="t-red">Doğru il: {q.provinceName}</p>}
-          </div>
-          <div className="game-q-side">
-            <div className="game-score" aria-label={`Skor ${score}`}><small>Skor</small><b className="tabular">{shownScore.toLocaleString("tr-TR")}</b></div>
-            {streak >= 2 && <span key={streak} className="game-streak">🔥 x{streak}</span>}
-            <button className="game-chip" onClick={() => { if (!lock.current) { setReveal(q.province); play("fail"); next("red", null, misses); } }}>Pas geç</button>
-          </div>
-        </section>
-      )}
-
-      <div className="game-map" ref={mapRef}>
-        <svg viewBox="0 0 1566 783" role="img" aria-label="Türkiye illeri haritası">
-          <defs>
-            <filter id="g-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          </defs>
-          {Object.entries(provincePaths).map(([id, p]) => (
-            <path key={id} d={p.d} onClick={e => click(id, e)}
-              className={["prov", colors[id] ? `p-${colors[id]}` : "", wrong.includes(id) && reveal === null ? "p-wrong" : "", reveal === id ? "p-reveal" : "", pop === id ? "p-pop" : ""].join(" ")}>
-              <title>{size === null || done ? p.name : ""}</title>
-            </path>))}
-        </svg>
-        {fx.map(f => (
-          <div key={f.id} className={`game-fx fx-${f.kind}`} style={{ left: f.x, top: f.y }}>
-            <span className="fx-text">{f.text}</span>
-            {f.kind === "ok" && Array.from({ length: 7 }, (_, k) => <i key={k} className="fx-leaf" style={{ "--a": `${k * (360 / 7) + 10}deg` } as CSSProperties} />)}
-          </div>
-        ))}
-      </div>
-    </main>
+      </main>
     </>
   );
 }

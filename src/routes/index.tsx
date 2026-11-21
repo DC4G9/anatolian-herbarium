@@ -19,6 +19,17 @@ function Index() {
     const readHash = () => { const id = new URLSearchParams(window.location.hash.slice(1)).get("plant"); if (id && plants.some(p => p.id === id)) update({ plant: id, view: "plant-page-view", photo: 0 }); };
     readHash(); window.addEventListener("hashchange", readHash); return () => window.removeEventListener("hashchange", readHash);
   }, []);
+  useEffect(() => { try { const saved = localStorage.getItem("etnoherba-lang"); if (saved === "tr" || saved === "en") update({ lang: saved }); } catch { /* storage unavailable */ } }, []);
+  useEffect(() => { document.documentElement.classList.add("eh-scroll-ready"); return () => document.documentElement.classList.remove("eh-scroll-ready"); }, []);
+  useEffect(() => {
+    const targets = document.querySelectorAll<HTMLElement>("[data-scroll-reveal]");
+    if (!("IntersectionObserver" in window)) { targets.forEach(target => target.classList.add("is-revealed")); return; }
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add("is-revealed"); observer.unobserve(entry.target); } });
+    }, { threshold: 0.12, rootMargin: "0px 0px -24px 0px" });
+    targets.forEach(target => observer.observe(target));
+    return () => observer.disconnect();
+  }, [state.view]);
   useEffect(() => { const escape = (e: KeyboardEvent) => { if (e.key === "Escape") update({ query: "", region: "", province: "" }); }; window.addEventListener("keydown", escape); return () => window.removeEventListener("keydown", escape); }, []);
   return (
     <HerbContext value={{ state, update }}>
@@ -40,16 +51,18 @@ function Index() {
 }
 
 function GameInvite() {
+  const { state } = useHerb();
   const [best, setBest] = useState(0);
+  const isEn = state.lang === "en";
   useEffect(() => { try { setBest(Number(localStorage.getItem("etnoherba-best-score")) || 0); } catch { /* private mode */ } }, []);
   return (
-    <Link to="/oyun" className="game-invite">
+    <Link to="/oyun" className="game-invite" data-scroll-reveal>
       <span className="game-invite-text">
-        <b>Bilgini test et: Bitki Harita Oyunu</b>
-        <small>Haritadaki bitkileri rastgele soruyoruz — yetiştikleri ili bulabilir misin? 15, 30, 50 ya da tüm bitkiler.</small>
-        {best > 0 && <em>En iyi skorun: {best.toLocaleString("tr-TR")}</em>}
+        <b>{isEn ? "Test your knowledge: Plant map game" : "Bilgini test et: Bitki Harita Oyunu"}</b>
+        <small>{isEn ? "We’ll show you a plant at random. Can you find its province? Choose 15, 30, 50, or all plants." : "Haritadaki bitkileri rastgele soruyoruz — yetiştikleri ili bulabilir misin? 15, 30, 50 ya da tüm bitkiler."}</small>
+        {best > 0 && <em>{isEn ? "Best score" : "En iyi skorun"}: {best.toLocaleString(isEn ? "en-US" : "tr-TR")}</em>}
       </span>
-      <span className="game-btn">Oyuna başla <span className="arrow">→</span></span>
+      <span className="game-btn">{isEn ? "Start game" : "Oyuna başla"} <span className="arrow">→</span></span>
     </Link>
   );
 }
@@ -84,7 +97,7 @@ function NameStory({ plant, lang }: { plant: Plant; lang: string }) {
   const story = nameStories[plant.id];
   const isEn = lang === "en";
   return (
-    <section className="name-story-card">
+    <section className="name-story-card" data-scroll-reveal>
       <div className="name-story-heading">
         <span className="name-story-mark" aria-hidden="true">✳</span>
         <div>
@@ -138,14 +151,13 @@ function CatalogStats({ lang, onSelectRegion }: { lang: string; onSelectRegion: 
     { value: endemicTagged, label: isEn ? "records tagged endemic" : "endemik ibareli kayıt" },
   ];
   return (
-    <section className="catalog-statistics" aria-labelledby="catalog-stats-title">
+    <section className="catalog-statistics" aria-labelledby="catalog-stats-title" data-scroll-reveal>
       <div className="catalog-stats-head">
         <div>
           <p className="catalog-eyebrow">{isEn ? "ETNOHERBA · CATALOG SNAPSHOT" : "ETNOHERBA · KATALOG ÖZETİ"}</p>
           <h2 id="catalog-stats-title">{isEn ? "Anatolian flora, in numbers" : "Sayılarla Anadolu Florası"}</h2>
           <p>{isEn ? "A living view of the records currently collected in the Etnoherba catalog." : "Etnoherba kataloğunda şu anda derlenen kayıtların görünümü."}</p>
         </div>
-        <span className="catalog-region-total"><b>{Object.keys(regions).length}</b><small>{isEn ? "regions" : "coğrafi bölge"}</small></span>
       </div>
       <div className="catalog-stat-grid">
         {stats.map((item, index) => <div key={item.label} className="catalog-stat" style={{ "--stat-delay": `${index * 90}ms` } as CSSProperties}>
@@ -171,6 +183,7 @@ function ImportedHeaderETNOHERBA() {
   const { state, update } = useHerb();
   const plant = plants.find(p => p.id === state.plant) ?? plants[0];
   const tr = (key: string) => translate(state.lang, key);
+  const setLanguage = (lang: "tr" | "en") => { update({ lang }); try { localStorage.setItem("etnoherba-lang", lang); } catch { /* storage unavailable */ } };
   if (!plant) return null;
   return (
     <header className={"\x62g-botanical-900 text-white \x73ticky \x73hadow-md no-print \x62order-b \x62order-botanical-800 [&]:sticky [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] [top:0px] [z-index:50]"}>
@@ -185,10 +198,14 @@ function ImportedHeaderETNOHERBA() {
           </div>
         </div>
         <div className={"w-full \x6dd:\x77-auto \x6frder-3 \x6dd:\x6frder-2 [&]:relative [@media(min-width:768px)]:flex-1 [@media(min-width:768px)]:[max-width:28rem]"} id="header-search-wrap">
-          <div className={"flex \x62g-botanical-950/\x375 \x62order \x62order-botanical-800 \x66ocus-within:\x62order-emerald-400 \x66ocus-within:\x72ing-2 \x66ocus-within:\x72ing-emerald-400/\x325 rounded-2xl \x70y-2 \x74ransition-all [&]:items-center [padding-left:0.875rem] [padding-right:0.875rem] [transition-property:all] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)] [&:focus-within]:[box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0_0_#0000)]"}><i className={"fa-solid fa-magnifying-glass \x74ext-emerald-300/\x380 \x74ext-xs mr-2.5 [flex-shrink:0]"} /><input className={"w-full bg-transparent \x74ext-xs \x73m:\x74ext-sm text-white placeholder-emerald-200/60 \x66ocus:\x6futline-none"} id="plant-search-input" value={state.query} onChange={e => update({ query: e.target.value })} type="text" autoComplete="off" spellCheck="false" placeholder={state.lang === "en" ? "Search plants, Latin name, province or region..." : "Bitki, Latince ad, il veya bölge ara..."} aria-label="Bitki veya bölge ara" /><button className={"hidden ml-2 \x74ext-emerald-300/\x375 \x68over:\x74ext-white \x74ext-xs p-1 transition-colors"} id="plant-search-clear" type="button" aria-label="Aramayı temizle" title="Aramayı temizle">{"\n                        "}<i className="fa-solid fa-xmark" />{"\n                    "}</button></div>
+          <div className={"flex \x62g-botanical-950/\x375 \x62order \x62order-botanical-800 \x66ocus-within:\x62order-emerald-400 \x66ocus-within:\x72ing-2 \x66ocus-within:\x72ing-emerald-400/\x325 rounded-2xl \x70y-2 \x74ransition-all [&]:items-center [padding-left:0.875rem] [padding-right:0.875rem] [transition-property:all] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)] [&:focus-within]:[box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0_0_#0000)]"}><i className={"fa-solid fa-magnifying-glass \x74ext-emerald-300/\x380 \x74ext-xs mr-2.5 [flex-shrink:0]"} /><input className={"w-full bg-transparent \x74ext-xs \x73m:\x74ext-sm text-white placeholder-emerald-200/60 \x66ocus:\x6futline-none"} id="plant-search-input" value={state.query} onChange={e => update({ query: e.target.value })} type="text" autoComplete="off" spellCheck="false" placeholder={state.lang === "en" ? "Search plants, Latin name, province or region..." : "Bitki, Latince ad, il veya bölge ara..."} aria-label={state.lang === "en" ? "Search plants or regions" : "Bitki veya bölge ara"} /><button className={"hidden ml-2 \x74ext-emerald-300/\x375 \x68over:\x74ext-white \x74ext-xs p-1 transition-colors"} id="plant-search-clear" type="button" aria-label={state.lang === "en" ? "Clear search" : "Aramayı temizle"} title={state.lang === "en" ? "Clear search" : "Aramayı temizle"}>{"\n                        "}<i className="fa-solid fa-xmark" />{"\n                    "}</button></div>
           <SearchResults />
         </div>
-        <nav className={"flex \x73pace-x-1.\x35 \x73m:\x73pace-x-3 \x74ext-sm \x66ont-medium \x6frder-2 \x6dd:\x6frder-3 [&]:items-center [flex-shrink:0]"}><button className={"\x70x-3 \x73m:\x70x-4 \x70y-2 rounded-xl \x62g-botanical-800 text-emerald-300 transition-colors flex \x73pace-x-2 [&]:items-center"} id="nav-map-view" onClick={() => update({ view: "map-view", query: "" })}>{"\n                    "}<i className="fa-solid fa-map" />{"\n                    "}<span className={"hidden \x6dd:\x69nline"}>{tr("nav.mapFull")}</span>{"\n                    "}<span className={"\x6dd:\x68idden"}>{tr("nav.mapShort")}</span>{"\n                "}</button><button className={"\x70x-3 \x73m:\x70x-4 \x70y-2 rounded-xl \x68over:\x62g-botanical-800 text-botanical-200 transition-colors flex \x73pace-x-2 [&]:items-center"} id="nav-qr-hub-view" onClick={() => update({ view: "qr-hub-view", query: "" })}>{"\n                    "}<i className="fa-solid fa-qrcode" />{"\n                    "}<span className={"hidden \x6dd:\x69nline"}>{tr("nav.qrFull")}</span>{"\n                    "}<span className={"\x6dd:\x68idden"}>{tr("nav.qrShort")}</span>{"\n                "}</button><div className={"flex \x62g-botanical-950/\x370 \x62order \x62order-botanical-800 rounded-xl p-1 ml-1 [&]:items-center"} role="group" aria-label="Language switcher"><button className={"\x70x-2 \x73m:\x70x-2.\x35 \x70y-1 rounded-lg \x74ext-xs \x66ont-bold \x74ransition-all \x62g-emerald-600 text-white \x73hadow-sm [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] [transition-property:all] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]"} type="button" id="lang-btn-tr" onClick={() => update({ lang: "tr" })}>TR</button><button className={"\x70x-2 \x73m:\x70x-2.\x35 \x70y-1 rounded-lg \x74ext-xs \x66ont-bold \x74ransition-all text-botanical-200 \x68over:\x74ext-white [transition-property:all] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]"} type="button" id="lang-btn-en" onClick={() => update({ lang: "en" })}>EN</button></div></nav>
+        <nav className={"flex \x73pace-x-1.\x35 \x73m:\x73pace-x-3 \x74ext-sm \x66ont-medium \x6frder-2 \x6dd:\x6frder-3 [&]:items-center [flex-shrink:0]"}><button className={"\x70x-3 \x73m:\x70x-4 \x70y-2 rounded-xl \x62g-botanical-800 text-emerald-300 transition-colors flex \x73pace-x-2 [&]:items-center"} id="nav-map-view" onClick={() => update({ view: "map-view", query: "" })}>{"\n                    "}<i className="fa-solid fa-map" />{"\n                    "}<span className={"hidden \x6dd:\x69nline"}>{tr("nav.mapFull")}</span>{"\n                    "}<span className={"\x6dd:\x68idden"}>{tr("nav.mapShort")}</span>{"\n                "}</button><button className={"\x70x-3 \x73m:\x70x-4 \x70y-2 rounded-xl \x68over:\x62g-botanical-800 text-botanical-200 transition-colors flex \x73pace-x-2 [&]:items-center"} id="nav-qr-hub-view" onClick={() => update({ view: "qr-hub-view", query: "" })}>{"\n                    "}<i className="fa-solid fa-qrcode" />{"\n                    "}<span className={"hidden \x6dd:\x69nline"}>{tr("nav.qrFull")}</span>{"\n                    "}<span className={"\x6dd:\x68idden"}>{tr("nav.qrShort")}</span>{"\n                "}</button><div className={"language-switcher" + (state.lang === "en" ? " is-en" : "")} role="group" aria-label={state.lang === "en" ? "Language" : "Dil seçimi"}>
+            <span className="language-switcher-thumb" aria-hidden="true" />
+            <button type="button" id="lang-btn-tr" aria-pressed={state.lang === "tr"} onClick={() => setLanguage("tr")}>TR</button>
+            <button type="button" id="lang-btn-en" aria-pressed={state.lang === "en"} onClick={() => setLanguage("en")}>EN</button>
+          </div></nav>
       </div>
     </header>
   );
@@ -253,8 +270,8 @@ function ImportedSectionTRkiyeEtnobotanikHaritas() {
           <button className={"\x70x-2.\x35 \x70y-1 rounded-xl text-[10px] \x73m:\x74ext-xs \x66ont-semibold \x62g-regionGuneyDogu text-white \x68over:\x6fpacity-90 \x74ransition-all \x73hadow-sm [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] [transition-property:all] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]"} id="badge-southeastern_anatolia" onClick={() => update({ region: "southeastern_anatolia", province: "" })}>{regionName(state.lang, "southeastern_anatolia")}</button>
         </div>
       </div>
-      <div className={"w-full rounded-3xl \x62g-gradient-to-br \x66rom-sky-50 \x76ia-slate-50 \x74o-emerald-50 \x62order \x62order-slate-300 \x73hadow-lg min-h-[460px] \x6dd:\x6din-h-[\x3560px] flex reveal is-visible reveal-scale is-visible [&]:items-center [&]:justify-center [&]:relative [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] [overflow:hidden] [padding:0.75rem]" + (state.region ? " region-open" : "")} id="map-stage">
-        <svg className={"w-full h-auto \x64rop-shadow-md [&]:max-h-[620px] [&]:select-none [filter:var(--tw-blur)_var(--tw-brightness)_var(--tw-contrast)_var(--tw-grayscale)_var(--tw-hue-rotate)_var(--tw-invert)_var(--tw-saturate)_var(--tw-sepia)_var(--tw-drop-shadow)] [transition:transform_0.8s_cubic-bezier(0.25,1,0.5,1)]"} id="turkey-svg" viewBox={viewBox} data-zoomed={state.region ? "true" : undefined} role="img" aria-label="Türkiye Coğrafi Bölgeler Haritası">
+      <div className={"w-full rounded-3xl \x62g-gradient-to-br \x66rom-sky-50 \x76ia-slate-50 \x74o-emerald-50 \x62order \x62order-slate-300 \x73hadow-lg min-h-[460px] \x6dd:\x6din-h-[\x3560px] flex reveal is-visible reveal-scale is-visible [&]:items-center [&]:justify-center [&]:relative [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] [overflow:hidden] [padding:0.75rem]" + (state.region ? " region-open" : "")} id="map-stage" data-scroll-reveal>
+        <svg className={"w-full h-auto \x64rop-shadow-md [&]:max-h-[620px] [&]:select-none [filter:var(--tw-blur)_var(--tw-brightness)_var(--tw-contrast)_var(--tw-grayscale)_var(--tw-hue-rotate)_var(--tw-invert)_var(--tw-saturate)_var(--tw-sepia)_var(--tw-drop-shadow)] [transition:transform_0.8s_cubic-bezier(0.25,1,0.5,1)]"} id="turkey-svg" viewBox={viewBox} data-zoomed={state.region ? "true" : undefined} role="img" aria-label={state.lang === "en" ? "Map of the geographical regions of Türkiye" : "Türkiye Coğrafi Bölgeler Haritası"}>
           <defs>
             <filter id="eh-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="5" /><feOffset dy="3" result="b" /><feFlood floodColor="#064e3b" floodOpacity="0.35" /><feComposite in2="b" operator="in" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           </defs>
@@ -823,14 +840,14 @@ function ImportedSectionTRkiyeEtnobotanikHaritas() {
             <i className="fa-solid fa-qrcode" />
           </div>
           <h3 className={"\x66ont-serif \x74ext-lg \x66ont-bold text-botanical-950 is-visible"}>{tr("about.howTitle")}</h3>
-          <p className={"\x74ext-sm text-slate-600 \x6ceading-relaxed reveal-text is-visible"} style={{ "--td": "285ms" } as CSSProperties}>Haritadaki bölgelere tıklayarak bitkileri keşfedin. Her bitkinin <strong>QR kodunu</strong> yazdırıp okuldaki veya doğadaki panolara yerleştirebilir, telefonla okutarak detaylı bilgiye ulaşabilirsiniz.</p>
+          <p className={"\x74ext-sm text-slate-600 \x6ceading-relaxed reveal-text is-visible"} style={{ "--td": "285ms" } as CSSProperties}>{state.lang === "en" ? <>Explore plants by selecting regions on the map. Print each plant’s <strong>QR code</strong> for display boards and scan it with a phone to open its botanical record.</> : <>Haritadaki bölgelere tıklayarak bitkileri keşfedin. Her bitkinin <strong>QR kodunu</strong> yazdırıp okuldaki veya doğadaki panolara yerleştirebilir, telefonla okutarak detaylı bilgiye ulaşabilirsiniz.</>}</p>
         </div>
         <div className={"\x62g-white rounded-3xl p-6 \x73hadow-sm \x62order \x62order-slate-200 \x73pace-y-3 reveal is-visible [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)]"} style={{ "--rd": "200ms" } as CSSProperties}>
           <div className={"w-12 h-12 rounded-2xl \x62g-amber-100 text-amber-700 flex \x74ext-xl reveal-icon [&]:items-center [&]:justify-center"}>
             <i className="fa-solid fa-seedling" />
           </div>
           <h3 className={"\x66ont-serif \x74ext-lg \x66ont-bold text-botanical-950 is-visible"}>{tr("about.whyTitle")}</h3>
-          <p className={"\x74ext-sm text-slate-600 \x6ceading-relaxed reveal-text is-visible"} style={{ "--td": "90ms" } as CSSProperties}>Etnoherba, Anadolu’nun bitki çeşitliliğini harita, herbaryum kayıtları ve botanik anlatılarla keşfetmeye açar.</p>
+          <p className={"\x74ext-sm text-slate-600 \x6ceading-relaxed reveal-text is-visible"} style={{ "--td": "90ms" } as CSSProperties}>{state.lang === "en" ? "Etnoherba explores Anatolia’s plant diversity through maps, herbarium records and botanical stories." : "Etnoherba, Anadolu’nun bitki çeşitliliğini harita, herbaryum kayıtları ve botanik anlatılarla keşfetmeye açar."}</p>
         </div>
       </div>
       <CatalogStats lang={state.lang} onSelectRegion={(id) => { update({ region: id, province: "" }); document.getElementById("map-view")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
@@ -879,7 +896,7 @@ function ImportedSectionKazdaGKnar() {
         <div className={"flex \x73pace-x-2 [&]:items-center"}><button onClick={() => window.print()} className={"\x70x-4 \x70y-2 \x62g-emerald-700 \x68over:\x62g-emerald-800 text-white rounded-xl \x74ext-xs \x73m:\x74ext-sm \x66ont-semibold transition-colors flex \x73pace-x-2 [&]:items-center"}>{"\n                        "}<i className="fa-solid fa-print" />{"\n                        "}<span className={"hidden \x73m:\x69nline"}>{tr("plant.print")}</span>{"\n                    "}</button><button onClick={async () => { try { await navigator.clipboard.writeText(location.href); update({ copied: true }); } catch { update({ copied: false }); } }} className={"\x70x-4 \x70y-2 \x62order \x62order-slate-300 text-slate-700 rounded-xl \x74ext-xs \x73m:\x74ext-sm \x66ont-semibold \x68over:\x62g-slate-100 transition-colors flex \x73pace-x-2 [&]:items-center"}>{"\n                        "}<i className="fa-solid fa-share-nodes" />{"\n                        "}<span id="page-share-text">{state.copied ? (state.lang === "en" ? "Copied" : "Kopyalandı") : tr("plant.copy")}</span>{"\n                    "}</button></div>
       </div>
       <div className={"\x62g-white rounded-3xl \x62order \x62order-slate-200 \x73hadow-xl reveal is-visible reveal-scale [animation:0.5s_ease-in-out_0s_1_normal_none_running_fadeIn] [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] [overflow:hidden]"}>
-        <div className={"\x62g-gradient-to-r \x66rom-botanical-950 \x74o-botanical-800 text-white p-6 \x6dd:\x70-10 [&]:relative"} id="page-hero-bg">
+        <div className={"\x62g-gradient-to-r \x66rom-botanical-950 \x74o-botanical-800 text-white p-6 \x6dd:\x70-10 [&]:relative"} id="page-hero-bg" data-scroll-reveal>
           <BotanicalPlateArt />
         <div className={"\x73pace-y-2 [&]:relative [max-width:56rem] [z-index:10]"}>
             <div className={"flex flex-wrap [&]:items-center [gap:0.5rem]"}><span className={"\x70x-3 \x70y-1 rounded-full \x62g-white/\x320 text-white \x74ext-xs \x66ont-bold [letter-spacing:0.05em]"} id="page-region-tag">{regionName(state.lang, plant.regionId) + " • " + (plant.provinceName ?? "")}</span><span className={"\x70x-3 \x70y-1 rounded-full \x62g-emerald-500/\x330 text-emerald-200 \x74ext-xs \x66ont-semibold"} id="page-status-tag">{plantText(plant, state.lang, "status")}</span><span className={"\x70x-3 \x70y-1 rounded-full \x74ext-xs \x66ont-bold"} id="page-cons-tag" /></div>

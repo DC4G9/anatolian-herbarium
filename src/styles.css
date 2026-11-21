@@ -426,9 +426,6 @@
 .catalog-eyebrow { margin:0 0 6px; color:oklch(.47 .07 150); font-size:10px; letter-spacing:.16em; font-weight:800; }
 .catalog-stats-head h2 { font-family:'Cinzel',serif; font-size:clamp(22px,3vw,34px); line-height:1.15; font-weight:700; color:oklch(.25 .04 150); }
 .catalog-stats-head p { margin-top:7px; color:oklch(.46 .025 240); font-size:13px; }
-.catalog-region-total { display:grid; place-items:center; flex:0 0 72px; width:72px; height:72px; align-content:center; border:1px solid oklch(.76 .055 150); border-radius:50%; color:oklch(.3 .055 150); background:oklch(1 .01 100 / .7); }
-.catalog-region-total b { font-family:'Cinzel',serif; font-size:24px; line-height:1; }
-.catalog-region-total small { margin-top:4px; font-size:8px; text-transform:uppercase; letter-spacing:.07em; }
 .catalog-stat-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
 .catalog-stat { min-height:84px; padding:14px; display:flex; flex-direction:column; justify-content:center; border:1px solid oklch(.88 .025 150); border-radius:14px; background:oklch(1 .005 100 / .78); animation:catalogRise .45s cubic-bezier(.22,1,.36,1) both; animation-delay:var(--stat-delay,0ms); }
 .catalog-stat strong { font-family:'Cinzel',serif; font-size:clamp(25px,3vw,36px); line-height:1; font-variant-numeric:tabular-nums; color:oklch(.37 .075 150); }
@@ -446,7 +443,7 @@
 .catalog-footnote { max-width:76ch; margin-top:18px; color:oklch(.48 .025 240); font-size:10px; line-height:1.55; }
 @keyframes catalogRise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 @keyframes catalogBar { from { transform:scaleX(0); } to { transform:scaleX(1); } }
-@media (max-width:640px) { .catalog-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .catalog-bars { grid-template-columns:minmax(0,1fr); } .catalog-region-total { flex-basis:58px; width:58px; height:58px; } }
+@media (max-width:640px) { .catalog-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .catalog-bars { grid-template-columns:minmax(0,1fr); } }
 
 /* A fine-ink plate motif frames the real, credited field photographs. */
 #page-hero-bg { position:relative; overflow:hidden; background:linear-gradient(115deg,oklch(.25 .04 150),oklch(.31 .045 150) 58%,oklch(.28 .035 135)) !important; }
@@ -487,3 +484,83 @@
 #plant-gallery .gallery-stage img { animation:photoDevelop .55s ease-out both; }
 @keyframes photoDevelop { from { opacity:.55; filter:grayscale(.4) saturate(.5); } to { opacity:1; filter:saturate(.88) contrast(1.025); } }
 @media (prefers-reduced-motion:reduce) { .catalog-stat,.catalog-bar-track i,.botanical-plate-art,#plant-gallery .gallery-stage img { animation:none !important; } }
+
+/* Shared sliding language selector */
+.language-switcher, .game-language-toggle {
+  position:relative; isolation:isolate; display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:center; width:82px; height:36px; padding:3px; border:1px solid oklch(.64 .07 150 / .55);
+  border-radius:999px; background:oklch(.18 .035 150 / .72); flex:0 0 auto;
+}
+.language-switcher-thumb {
+  position:absolute; z-index:0; left:3px; top:3px; width:calc(50% - 3px); height:calc(100% - 6px);
+  border-radius:999px; background:oklch(.57 .12 150); box-shadow:0 2px 8px oklch(.08 .025 150 / .26);
+  transition:transform .28s cubic-bezier(.22,1,.36,1);
+}
+.language-switcher.is-en .language-switcher-thumb, .game-language-toggle.is-en .language-switcher-thumb { transform:translateX(calc(100% + 3px)); }
+.language-switcher button, .game-language-toggle button {
+  position:relative; z-index:1; min-width:0; min-height:28px; padding:0; border:0; border-radius:999px;
+  background:transparent; color:oklch(.86 .025 145); font-size:11px; font-weight:800; letter-spacing:.04em;
+  cursor:pointer; transition:color .18s ease;
+}
+.language-switcher button[aria-pressed="true"], .game-language-toggle button[aria-pressed="true"] { color:oklch(.99 .01 95); }
+.language-switcher button:focus-visible, .game-language-toggle button:focus-visible { outline:2px solid oklch(.9 .08 100); outline-offset:2px; }
+
+/* Scroll-linked cartographic light and progressive section reveals */
+.eh-scroll-light {
+  position:absolute; z-index:0; left:22%; top:20%; width:56vw; height:54vh; border-radius:50%;
+  background:radial-gradient(ellipse at center, oklch(.75 .065 145 / .18), oklch(.85 .045 95 / .06) 42%, transparent 72%);
+  filter:blur(26px); pointer-events:none; will-change:transform,opacity;
+}
+.eh-contour, .eh-engraving { will-change:transform; }
+.eh-contour { animation:none !important; }
+html.eh-scroll-ready [data-scroll-reveal] {
+  opacity:0; translate:0 12px; filter:blur(1.5px);
+  transition:opacity .55s ease, translate .65s cubic-bezier(.22,1,.36,1), filter .55s ease;
+}
+html.eh-scroll-ready [data-scroll-reveal].is-revealed { opacity:1; translate:0 0; filter:none; }
+
+/* Refined, short hover feedback for the atlas controls and cards */
+#region-badges-container button, #nav-map-view, #nav-qr-hub-view {
+  transform:translateY(0); transition:transform .2s ease,filter .2s ease,background-color .2s ease;
+}
+#region-badges-container button:hover, #nav-map-view:hover, #nav-qr-hub-view:hover { transform:translateY(-2px); filter:brightness(1.08); }
+#map-stage #turkey-svg .region-group { transition:opacity .2s ease; }
+#map-stage #turkey-svg .region-group:hover { opacity:.9; }
+.catalog-stat { transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease; }
+.catalog-stat:hover { transform:translateY(-3px); border-color:oklch(.72 .07 150); box-shadow:0 10px 24px -16px oklch(.28 .05 150 / .32); }
+.catalog-bar-row { transition:background-color .2s ease,transform .2s ease; }
+.catalog-bar-row:hover { transform:translateX(2px); }
+.name-story-card { transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease; }
+.name-story-card:hover { transform:translateY(-2px); border-color:oklch(.72 .06 150); box-shadow:0 12px 24px -18px oklch(.25 .04 150 / .35); }
+.region-intro, .qr-card, .game-card { transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease; }
+.qr-card:hover { transform:translateY(-3px); border-color:oklch(.72 .07 150); box-shadow:0 12px 25px -18px oklch(.25 .04 150 / .36); }
+.game-card:hover { border-color:oklch(.78 .045 150); box-shadow:0 14px 28px -22px oklch(.25 .04 150 / .34); }
+.game-btn, .game-chip, .game-back, .pan-center, .province-button, .drawer-plant {
+  transition:transform .2s ease,filter .2s ease,background-color .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.game-btn:hover, .game-chip:hover, .pan-center:hover { transform:translateY(-2px); }
+.game-btn:active, .game-chip:active, .pan-center:active { transform:translateY(0); }
+.game-back:hover { color:oklch(.36 .09 150); text-decoration:underline; text-underline-offset:3px; }
+.game-btn:focus-visible, .game-chip:focus-visible, .game-back:focus-visible, .pan-center:focus-visible,
+#region-badges-container button:focus-visible, #nav-map-view:focus-visible, #nav-qr-hub-view:focus-visible {
+  outline:2px solid oklch(.48 .09 150); outline-offset:3px;
+}
+.game-top-right { display:flex; align-items:center; justify-content:flex-end; gap:9px; flex-wrap:wrap; }
+.game-review-heading { margin:22px 0 8px; padding-top:14px; border-top:1px solid var(--herb-line); font-family:'Cinzel',serif; font-size:16px; font-weight:700; color:var(--herb-ink); }
+@media (max-width:600px) {
+  .language-switcher, .game-language-toggle { width:76px; }
+  .game-top-right { gap:6px; }
+  .game-best { font-size:11px; }
+  .game-review { columns:1; }
+  .eh-scroll-light { width:80vw; left:10%; height:46vh; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .eh-scroll-light { display:none; }
+  html.eh-scroll-ready [data-scroll-reveal], html.eh-scroll-ready [data-scroll-reveal].is-revealed {
+    opacity:1; translate:none; filter:none; transition:none;
+  }
+  .language-switcher-thumb { transition:none; }
+  #region-badges-container button, #nav-map-view, #nav-qr-hub-view, .catalog-stat, .catalog-bar-row,
+  .name-story-card, .region-intro, .qr-card, .game-card, .game-btn, .game-chip, .game-back, .pan-center,
+  .province-button, .drawer-plant { transition:none; }
+}

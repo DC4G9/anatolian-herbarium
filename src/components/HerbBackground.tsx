@@ -1,8 +1,55 @@
-/** Restrained botanical-paper backdrop with a subtle atlas contour layer. */
+import { useEffect, useRef } from "react";
+
+/** Subtle cartographic layers respond to page scroll at different depths. */
 export function HerbBackground() {
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = root.current;
+    if (!node) return;
+    let frame = 0;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      cancelAnimationFrame(frame);
+      if (reduceMotion.matches) {
+        node.querySelectorAll<HTMLElement>(".eh-contour, .engraving-east, .engraving-west, .eh-scroll-light").forEach(layer => layer.style.removeProperty("transform"));
+        const light = node.querySelector<HTMLElement>(".eh-scroll-light");
+        if (light) light.style.removeProperty("opacity");
+        return;
+      }
+      frame = requestAnimationFrame(() => {
+        const y = window.scrollY || 0;
+        const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const progress = Math.max(0, Math.min(1, y / max));
+        const contour = node.querySelector<HTMLElement>(".eh-contour");
+        const east = node.querySelector<HTMLElement>(".engraving-east");
+        const west = node.querySelector<HTMLElement>(".engraving-west");
+        const light = node.querySelector<HTMLElement>(".eh-scroll-light");
+        if (contour) contour.style.transform = `translate3d(0, ${-(y * 0.026).toFixed(1)}px, 0)`;
+        if (east) east.style.transform = `translate3d(0, ${(y * 0.055).toFixed(1)}px, 0)`;
+        if (west) west.style.transform = `translate3d(0, ${-(y * 0.018).toFixed(1)}px, 0) rotate(11deg)`;
+        if (light) {
+          light.style.transform = `translate3d(${((progress - 0.5) * 9).toFixed(2)}vw, ${-(y * 0.035).toFixed(1)}px, 0)`;
+          light.style.opacity = String(0.045 + Math.sin(progress * Math.PI) * 0.1);
+        }
+      });
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    reduceMotion.addEventListener("change", update);
+    update();
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      reduceMotion.removeEventListener("change", update);
+    };
+  }, []);
+
   return (
-    <div className="eh-bg" aria-hidden="true">
+    <div className="eh-bg" ref={root} aria-hidden="true">
       <div className="eh-paper-light" />
+      <div className="eh-scroll-light" />
       <div className="eh-contour" />
       <svg className="eh-engraving engraving-east" viewBox="0 0 260 360" fill="none">
         <g stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round">
