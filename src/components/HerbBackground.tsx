@@ -1,37 +1,32 @@
-import type { CSSProperties } from "react";
-
-/** Etnoherba ambient background: soft blurred botanical light, topographic
- *  contour lines (atlas feel) and drifting leaves at different depths.
- *  Pure SVG/CSS so it works on every page without icon fonts. */
-const LEAF = "M12 2C6 6 3.5 11 4 16.5c.3 3 2.4 5.5 5.5 5.5 0 0 .5-6 2.5-10-1 4.5-1 8-1 10 6 0 9-4.5 9-9.5C20 7.5 16.5 4 12 2Z";
-const SPRIG = "M12 22V9m0 4c-3 0-6-2-6-6 3 0 6 2 6 6Zm0-3c0-3 2.5-6 6-6 0 3.5-2.5 6-6 6Zm0-4c-1.6-1.6-1.6-4.4 0-6 1.6 1.6 1.6 4.4 0 6Z";
-
-type Leaf = { d: string; style: CSSProperties; depth: 1 | 2 | 3; sprig?: boolean };
-const leaves: Leaf[] = [
-  { d: LEAF, depth: 1, style: { left: "5%", top: "15%", width: 30, rotate: "-20deg" } },
-  { d: SPRIG, depth: 2, sprig: true, style: { left: "3%", top: "63%", width: 34 } },
-  { d: LEAF, depth: 2, style: { right: "6%", top: "27%", width: 36, rotate: "35deg" } },
-  { d: SPRIG, depth: 1, sprig: true, style: { right: "9%", top: "77%", width: 28 } },
-  { d: LEAF, depth: 1, style: { left: "47%", top: "45%", width: 20, rotate: "70deg" } },
-  { d: LEAF, depth: 3, style: { left: "20%", top: "84%", width: 64, rotate: "-55deg" } },
-  { d: LEAF, depth: 3, style: { right: "22%", top: "6%", width: 72, rotate: "120deg" } },
-  { d: SPRIG, depth: 3, sprig: true, style: { left: "80%", top: "50%", width: 60 } },
-];
-
+/** Restrained botanical-paper backdrop with a subtle atlas contour layer. */
 export function HerbBackground() {
   return (
     <div className="eh-bg" aria-hidden="true">
-      <div className="eh-aurora a1" />
-      <div className="eh-aurora a2" />
-      <div className="eh-aurora a3" />
-      <div className="eh-aurora a4" />
+      <div className="eh-paper-light" />
       <div className="eh-contour" />
-      {leaves.map((l, i) => (
-        <svg key={i} viewBox="0 0 24 24" className={`eh-leaf d${l.depth}`} style={{ ...l.style, animationDelay: `${-i * 3.7}s` }}>
-          <path d={l.d} className={l.sprig ? "eh-sprig" : undefined} />
-        </svg>
-      ))}
-      <div className="eh-vignette" />
+      <svg className="eh-engraving engraving-east" viewBox="0 0 260 360" fill="none">
+        <g stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M210 344C191 300 181 254 166 209 148 156 124 105 73 42" />
+          <path d="M176 246c-45 5-78-11-97-45 41-4 74 11 97 45Z" />
+          <path d="M155 190c-4-40 12-70 47-91 4 38-12 69-47 91Z" />
+          <path d="M133 143c-39 1-68-17-87-53 39 0 68 18 87 53Z" />
+          <path d="M112 108c-2-36 13-64 44-83 2 35-12 63-44 83Z" />
+          <path d="M185 278c-34-4-58-23-70-58 34 4 58 22 70 58Z" />
+          <path d="M90 74c-22-5-38-19-47-43 23 5 38 19 47 43Z" />
+          <path d="M165 210c-15-13-26-30-31-50M137 153c-15-10-28-25-38-45M175 269c-16-9-29-24-38-42" />
+        </g>
+      </svg>
+      <svg className="eh-engraving engraving-west" viewBox="0 0 250 330" fill="none">
+        <g stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M28 310c31-52 57-105 77-161 14-39 30-77 57-118" />
+          <path d="M83 218c-35 7-63-4-83-33 33-7 61 4 83 33Z" />
+          <path d="M105 159c-5-33 8-59 38-78 5 32-8 58-38 78Z" />
+          <path d="M128 112c-33 1-57-14-73-44 33-1 57 14 73 44Z" />
+          <path d="M148 74c-1-30 12-53 38-69 2 29-11 52-38 69Z" />
+          <path d="M62 258c-26 5-48-4-63-25 25-5 47 4 63 25Z" />
+          <path d="M95 191c-12-10-21-23-25-38M119 134c-13-9-24-21-32-37M75 240c-12-7-21-17-27-30" />
+        </g>
+      </svg>
       <div className="eh-grain" />
     </div>
   );

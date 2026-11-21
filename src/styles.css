@@ -366,3 +366,124 @@
 @keyframes ehFloat { 0% { opacity:0; transform:translate(-50%,-30%) scale(.7); } 20% { opacity:1; transform:translate(-50%,-80%) scale(1.1); } 100% { opacity:0; transform:translate(-50%,-260%) scale(1); } }
 @keyframes ehBurst { from { opacity:1; transform:rotate(var(--a)) translateY(0) scale(1); } to { opacity:0; transform:rotate(var(--a)) translateY(-44px) rotate(90deg) scale(.6); } }
 @media (max-width:640px) { .game-q { position:sticky; } .game-q-side { width:100%; justify-content:space-between; } .game-invite-map { display:none; } }
+
+/* ==========================================================================
+   Etnoherba editorial layer: restrained field-paper, regional pan, herbarium
+   ========================================================================== */
+
+/* Quiet atlas paper: no floating blobs or playful leaf motion. */
+.eh-bg {
+  background:
+    radial-gradient(ellipse at 82% 12%, oklch(.78 .045 150 / .12), transparent 34%),
+    radial-gradient(ellipse at 8% 82%, oklch(.83 .035 85 / .13), transparent 30%),
+    linear-gradient(145deg, oklch(.985 .012 95), oklch(.964 .019 100) 52%, oklch(.976 .013 145));
+}
+.eh-paper-light { position:absolute; inset:0; background:linear-gradient(90deg, transparent 0 49.9%, oklch(.45 .04 145 / .018) 50%, transparent 50.1%); }
+.eh-contour { inset:-4%; opacity:.38; background-size:760px 760px; animation:none; -webkit-mask-image:radial-gradient(ellipse at 52% 46%, #000 0%, rgba(0,0,0,.4) 52%, transparent 88%); mask-image:radial-gradient(ellipse at 52% 46%, #000 0%, rgba(0,0,0,.4) 52%, transparent 88%); }
+.eh-engraving { position:absolute; width:clamp(150px,22vw,330px); height:auto; color:oklch(.36 .055 150); opacity:.085; }
+.engraving-east { right:-2.5vw; top:8vh; }
+.engraving-west { left:-3vw; bottom:-9vh; transform:rotate(11deg); opacity:.065; }
+.eh-grain { opacity:.018; mix-blend-mode:multiply; }
+@media (prefers-reduced-motion:reduce) { .eh-contour { animation:none !important; } }
+
+/* The regional map and detail panel share the stage instead of overlapping. */
+#map-stage { display:grid !important; grid-template-columns:minmax(0,1fr); align-content:center; gap:0; }
+#map-stage.region-open { padding:12px !important; grid-template-columns:minmax(15rem,.36fr) minmax(0,.64fr); align-items:stretch; min-height:600px; }
+#map-stage.region-open #turkey-svg { grid-column:2; grid-row:1; width:100%; max-height:620px; align-self:center; }
+#map-stage.region-open #expanded-region-drawer { grid-column:1; grid-row:1; position:relative !important; inset:auto !important; width:auto !important; min-width:0; max-height:560px !important; margin:0; }
+#map-stage.region-open #markers-layer { grid-column:1 / -1; grid-row:1; }
+#map-stage #turkey-svg { min-width:0; transform-origin:center; }
+#map-stage.region-open #turkey-svg .province-label { paint-order:stroke; }
+.map-pan-controls { display:grid; grid-template-columns:auto minmax(100px,1fr) auto auto auto; align-items:center; gap:12px; margin:-8px 10px 8px; padding:10px 14px; border:1px solid oklch(.86 .025 150); border-radius:14px; color:oklch(.32 .04 150); background:oklch(1 .006 100 / .78); box-shadow:0 6px 20px -16px oklch(.3 .04 150 / .3); }
+.map-pan-controls label { font-size:12px; font-weight:700; }
+.map-pan-controls input[type="range"] { width:100%; min-width:80px; accent-color:oklch(.48 .08 150); cursor:ew-resize; }
+.map-pan-controls .pan-end { font-size:11px; color:oklch(.48 .025 150); white-space:nowrap; }
+.pan-center { min-height:32px; padding:5px 10px; border:1px solid oklch(.84 .03 150); border-radius:9px; color:oklch(.32 .04 150); background:transparent; font-size:11px; font-weight:700; transition:background-color .2s,border-color .2s; }
+.pan-center:hover { background:oklch(.94 .025 150); border-color:oklch(.68 .06 150); }
+#expanded-region-drawer { background:oklch(.99 .006 95 / .9) !important; border:1px solid oklch(.87 .025 150) !important; box-shadow:0 16px 38px -25px oklch(.25 .04 150 / .4) !important; }
+@media (max-width:900px) {
+  #map-stage.region-open { grid-template-columns:minmax(0,1fr); gap:12px; min-height:0; }
+  #map-stage.region-open #expanded-region-drawer { grid-column:1; grid-row:1; max-height:360px !important; }
+  #map-stage.region-open #turkey-svg { grid-column:1; grid-row:2; width:100%; }
+  #map-stage.region-open #markers-layer { grid-column:1; grid-row:1 / 3; }
+  .map-pan-controls { grid-template-columns:1fr auto auto; gap:8px; }
+  .map-pan-controls label { grid-column:1 / -1; }
+  .map-pan-controls input[type="range"] { grid-column:1; grid-row:2; }
+  .map-pan-controls .pan-left { grid-column:2; grid-row:2; }
+  .map-pan-controls .pan-center { grid-column:3; grid-row:2; }
+  .map-pan-controls .pan-right { grid-column:4; grid-row:2; }
+}
+@media (max-width:520px) {
+  #map-stage.region-open { padding:8px !important; }
+  .map-pan-controls { margin:0 0 8px; padding:10px; gap:6px; }
+  .map-pan-controls .pan-end { font-size:10px; }
+  .map-pan-controls input[type="range"] { min-width:60px; }
+}
+
+/* Data-led catalog dashboard, with quiet bar motion and honest scope. */
+.catalog-statistics { padding:clamp(20px,4vw,36px); border:1px solid oklch(.86 .03 150); border-radius:24px; color:oklch(.24 .035 150); background:linear-gradient(135deg,oklch(.99 .008 95 / .96),oklch(.955 .024 145 / .94)); box-shadow:0 20px 50px -35px oklch(.26 .05 150 / .38); }
+.catalog-stats-head { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:22px; }
+.catalog-eyebrow { margin:0 0 6px; color:oklch(.47 .07 150); font-size:10px; letter-spacing:.16em; font-weight:800; }
+.catalog-stats-head h2 { font-family:'Cinzel',serif; font-size:clamp(22px,3vw,34px); line-height:1.15; font-weight:700; color:oklch(.25 .04 150); }
+.catalog-stats-head p { margin-top:7px; color:oklch(.46 .025 240); font-size:13px; }
+.catalog-region-total { display:grid; place-items:center; flex:0 0 72px; width:72px; height:72px; align-content:center; border:1px solid oklch(.76 .055 150); border-radius:50%; color:oklch(.3 .055 150); background:oklch(1 .01 100 / .7); }
+.catalog-region-total b { font-family:'Cinzel',serif; font-size:24px; line-height:1; }
+.catalog-region-total small { margin-top:4px; font-size:8px; text-transform:uppercase; letter-spacing:.07em; }
+.catalog-stat-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.catalog-stat { min-height:84px; padding:14px; display:flex; flex-direction:column; justify-content:center; border:1px solid oklch(.88 .025 150); border-radius:14px; background:oklch(1 .005 100 / .78); animation:catalogRise .45s cubic-bezier(.22,1,.36,1) both; animation-delay:var(--stat-delay,0ms); }
+.catalog-stat strong { font-family:'Cinzel',serif; font-size:clamp(25px,3vw,36px); line-height:1; font-variant-numeric:tabular-nums; color:oklch(.37 .075 150); }
+.catalog-stat span { margin-top:7px; color:oklch(.45 .025 240); font-size:11px; line-height:1.3; }
+.catalog-regions { margin-top:24px; padding-top:18px; border-top:1px solid oklch(.87 .03 150); }
+.catalog-regions h3 { margin-bottom:12px; font-family:'Cinzel',serif; font-size:16px; font-weight:700; }
+.catalog-bars { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:24px; row-gap:6px; }
+.catalog-bar-row { width:100%; min-width:0; min-height:34px; display:grid; grid-template-columns:minmax(92px,1.05fr) minmax(40px,2fr) 28px; align-items:center; gap:10px; padding:4px 2px; text-align:left; border-radius:7px; transition:background-color .2s; }
+.catalog-bar-row:hover { background:oklch(.93 .025 150 / .68); }
+.catalog-bar-row:focus-visible { outline:2px solid oklch(.48 .08 150); outline-offset:2px; }
+.catalog-bar-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:oklch(.35 .035 150); }
+.catalog-bar-track { display:block; height:5px; overflow:hidden; border-radius:99px; background:oklch(.89 .025 150); }
+.catalog-bar-track i { display:block; width:var(--bar-width); height:100%; border-radius:inherit; background:linear-gradient(90deg,oklch(.46 .08 150),oklch(.62 .07 145)); transform-origin:left; animation:catalogBar .9s cubic-bezier(.22,1,.36,1) both; animation-delay:var(--bar-delay,0ms); }
+.catalog-bar-row b { text-align:right; font-size:12px; font-variant-numeric:tabular-nums; color:oklch(.28 .04 150); }
+.catalog-footnote { max-width:76ch; margin-top:18px; color:oklch(.48 .025 240); font-size:10px; line-height:1.55; }
+@keyframes catalogRise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@keyframes catalogBar { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@media (max-width:640px) { .catalog-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .catalog-bars { grid-template-columns:minmax(0,1fr); } .catalog-region-total { flex-basis:58px; width:58px; height:58px; } }
+
+/* A fine-ink plate motif frames the real, credited field photographs. */
+#page-hero-bg { position:relative; overflow:hidden; background:linear-gradient(115deg,oklch(.25 .04 150),oklch(.31 .045 150) 58%,oklch(.28 .035 135)) !important; }
+#page-hero-bg::after { content:""; position:absolute; inset:0; pointer-events:none; opacity:.2; background:linear-gradient(90deg,transparent 58%,oklch(.8 .045 95 / .11)),url("/site-assets/eh-contour.svg") right center/360px auto repeat; }
+#page-hero-bg > div:not(.botanical-plate-art) { max-width:min(70%,56rem) !important; }
+.botanical-plate-art { position:absolute; z-index:1; right:6%; top:-12px; width:clamp(150px,20vw,270px); height:auto; color:oklch(.82 .045 95); opacity:.72; pointer-events:none; animation:plateAppear .9s cubic-bezier(.22,1,.36,1) both; }
+.plate-ink { stroke-dasharray:1; stroke-dashoffset:0; }
+.plate-guides { opacity:.55; }
+@keyframes plateAppear { from { opacity:0; transform:translateY(8px) rotate(2deg); } to { opacity:.72; transform:none; } }
+#plant-gallery { padding:12px; border:1px solid oklch(.86 .03 145); border-radius:17px; background:linear-gradient(145deg,oklch(.99 .01 95),oklch(.955 .02 110)); box-shadow:0 12px 32px -25px oklch(.22 .04 145 / .42); }
+#plant-gallery .gallery-stage { border:1px solid oklch(.82 .035 145); border-radius:10px; background:oklch(.94 .02 95); box-shadow:inset 0 0 0 5px oklch(1 .006 95 / .62); }
+#plant-gallery .gallery-stage img { filter:saturate(.88) contrast(1.025); transition:filter .35s ease, transform .55s cubic-bezier(.22,1,.36,1); }
+#plant-gallery .gallery-stage:hover img { filter:saturate(1) contrast(1.04); transform:scale(1.012); }
+#plant-gallery .gallery-thumbs button { flex:0 0 auto; border:1px solid oklch(.84 .025 145); border-radius:8px; padding:2px; transition:border-color .2s,transform .2s; }
+#plant-gallery .gallery-thumbs button:hover { border-color:oklch(.5 .08 150); transform:translateY(-2px); }
+#plant-gallery .gallery-credit { padding:0 3px; }
+.name-story-card { position:relative; overflow:hidden; padding:18px 20px; border:1px solid oklch(.85 .04 145); border-left:3px solid oklch(.49 .08 150); border-radius:4px 14px 14px 4px; background:linear-gradient(105deg,oklch(.97 .025 100),oklch(.99 .008 95)); }
+.name-story-heading { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.name-story-mark { width:30px; height:30px; display:grid; place-items:center; border:1px solid oklch(.77 .05 145); border-radius:50%; color:oklch(.42 .07 150); font-size:16px; }
+.name-story-kicker { color:oklch(.48 .06 150); font-size:9px; letter-spacing:.13em; font-weight:800; }
+.name-story-heading h3 { font-family:'Cinzel',serif; color:oklch(.28 .04 150); font-size:17px; font-weight:700; }
+.name-story-card > p { max-width:74ch; color:oklch(.37 .025 240); font-size:13px; line-height:1.7; }
+.name-story-card > a { display:inline-flex; align-items:center; gap:5px; margin-top:10px; color:oklch(.4 .07 150); font-size:11px; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+.name-story-card > a:hover { color:oklch(.32 .09 150); }
+@media (max-width:640px) { #page-hero-bg > div:not(.botanical-plate-art) { max-width:100% !important; } .botanical-plate-art { right:-20px; top:auto; bottom:-35px; width:145px; opacity:.22; } }
+
+/* The game invite is intentionally type-led; no decorative map thumbnail. */
+.game-invite { gap:16px; }
+.game-invite-map { display:none !important; }
+.game-invite-text { margin-left:0; }
+.specimen-gallery { position:relative; }
+.gallery-engraving { position:absolute; right:22px; bottom:18px; width:clamp(54px,9vw,100px); height:auto; z-index:2; color:oklch(.98 .02 95); opacity:.74; filter:drop-shadow(0 1px 5px oklch(.2 .03 150 / .32)); pointer-events:none; }
+.specimen-caption { display:grid; grid-template-columns:1fr auto; gap:3px 12px; padding:12px 4px 9px; border-bottom:1px solid oklch(.86 .03 145); color:oklch(.31 .04 150); }
+.specimen-caption > span { grid-column:1 / -1; color:oklch(.49 .06 150); font-size:9px; letter-spacing:.14em; font-weight:800; }
+.specimen-caption b { font-family:'Cinzel',serif; font-size:15px; line-height:1.35; }
+.specimen-caption i { grid-column:1; color:oklch(.47 .025 240); font-family:serif; font-size:12px; }
+.specimen-caption small { grid-column:2; grid-row:2 / span 2; align-self:center; color:oklch(.5 .025 240); font-size:10px; text-align:right; }
+#plant-gallery .gallery-stage img { animation:photoDevelop .55s ease-out both; }
+@keyframes photoDevelop { from { opacity:.55; filter:grayscale(.4) saturate(.5); } to { opacity:1; filter:saturate(.88) contrast(1.025); } }
+@media (prefers-reduced-motion:reduce) { .catalog-stat,.catalog-bar-track i,.botanical-plate-art,#plant-gallery .gallery-stage img { animation:none !important; } }

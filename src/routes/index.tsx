@@ -7,7 +7,7 @@ import capturedCSS from "../styles/site.css?raw";
 import { HerbBackground } from "@/components/HerbBackground";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Etnoherba - Türkiye Etnobotanik Haritası" }, { name: "description", content: "Türkiye’nin yedi coğrafi bölgesindeki endemik ve tıbbi bitkileri keşfedin." }, { property: "og:title", content: "Etnoherba - Türkiye Etnobotanik Haritası" }, { property: "og:description", content: "Türkiye’nin coğrafi bitki envanteri, tür bilgileri ve QR kodları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Etnoherba - Türkiye Etnobotanik Haritası" }, { name: "description", content: "Türkiye’nin yedi coğrafi bölgesindeki endemik ve yerel bitki türlerini keşfedin." }, { property: "og:title", content: "Etnoherba - Türkiye Etnobotanik Haritası" }, { property: "og:description", content: "Türkiye’nin coğrafi bitki envanteri, tür bilgileri ve QR kodları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   staticData: { importedDocument: { html: { "className": "js-reveal", "lang": "tr" }, body: { "className": "\x6din-h-screen \x66lex \x66lex-col \x73election:\x62g-emerald-200 \x73election:\x74ext-emerald-900" } } },
   component: Index,
 });
@@ -44,9 +44,6 @@ function GameInvite() {
   useEffect(() => { try { setBest(Number(localStorage.getItem("etnoherba-best-score")) || 0); } catch { /* private mode */ } }, []);
   return (
     <Link to="/oyun" className="game-invite">
-      <span className="game-invite-map" aria-hidden="true">
-        <svg viewBox="0 0 64 40"><path d="M4 22c6-8 14-12 24-12 6 0 10 3 16 3 5 0 9-2 14 1-1 6-5 9-10 11-8 3-16 2-24 4-7 2-14 2-20-7Z" /><circle className="pin p1" cx="22" cy="20" r="2.4" /><circle className="pin p2" cx="40" cy="18" r="2.4" /><circle className="pin p3" cx="50" cy="24" r="2.4" /></svg>
-      </span>
       <span className="game-invite-text">
         <b>Bilgini test et: Bitki Harita Oyunu</b>
         <small>Haritadaki bitkileri rastgele soruyoruz — yetiştikleri ili bulabilir misin? 15, 30, 50 ya da tüm bitkiler.</small>
@@ -54,6 +51,119 @@ function GameInvite() {
       </span>
       <span className="game-btn">Oyuna başla <span className="arrow">→</span></span>
     </Link>
+  );
+}
+
+type NameStoryData = { tr: string; en: string; source?: string; sourceLabel?: { tr: string; en: string } };
+const nameStories: Record<string, NameStoryData> = {
+  "mar-1": {
+    tr: "Kazdağı Göknarı adı iki ipucunu birleştiriyor: Kazdağı’nın yer adını ve ağacın göknar oluşunu. Bu katalog kaydı türü Balıkesir ile ilişkilendiriyor.",
+    en: "The Turkish name combines two clues: the Kazdağı place name and the tree's identity as a fir. This catalog record links it to Balıkesir.",
+  },
+  "mar-3": {
+    tr: "Bilimsel addaki byzantinus, İstanbul’un tarihî Bizans adıyla ilişkilidir. Tür, 19. yüzyılda İstanbul’dan gönderilen örneklerle adlandırılmış; plicatus ise yapraklardaki kat izini anlatır.",
+    en: "The epithet byzantinus refers to Byzantium, the historical name associated with Istanbul. The taxon was named from specimens sent from Istanbul in the 19th century; plicatus describes the folded leaf feature.",
+    source: "https://citesbulbs.myspecies.info/category/galanthus-wild-species/galanthus-plicatus/galanthus-plicatus-byzantinus",
+    sourceLabel: { tr: "Galanthus adlandırma tarihi", en: "Galanthus name history" },
+  },
+  "mar-7": {
+    tr: "Keltepe Çiğdemi, adını Keltepe’den alan dar yayılışlı bir tür. 2019’da yayımlanan botanik makalesi onu Kocaeli’ndeki Samanlı Dağları’nın yüksek kesimlerinden yeni bir tür olarak tanımlıyor.",
+    en: "Keltepe Crocus is a narrowly distributed species whose name points to Keltepe. A 2019 botanical paper described it as a new species from the high part of the Samanlı Mountains in Kocaeli.",
+    source: "https://doi.org/10.11646/phytotaxa.418.2.8",
+    sourceLabel: { tr: "2019 tür tanımı", en: "2019 species description" },
+  },
+  "mar-9": {
+    tr: "Bilimsel addaki pulvinatus, botanikte ‘yastık biçimli’ anlamına gelir. Bu, katalog açıklamasındaki kayalık zemine yastık gibi yayılan büyüme biçimiyle örtüşür.",
+    en: "The scientific epithet pulvinatus means ‘cushion-shaped’ in botanical usage. It echoes the catalog description of a plant spreading like a cushion over rocky ground.",
+    source: "https://www.collinsdictionary.com/us/dictionary/english/pulvinate",
+    sourceLabel: { tr: "Botanik terimi: pulvinate", en: "Botanical term: pulvinate" },
+  },
+};
+
+function NameStory({ plant, lang }: { plant: Plant; lang: string }) {
+  const story = nameStories[plant.id];
+  const isEn = lang === "en";
+  return (
+    <section className="name-story-card">
+      <div className="name-story-heading">
+        <span className="name-story-mark" aria-hidden="true">✳</span>
+        <div>
+          <p className="name-story-kicker">{isEn ? "FIELD NOTE · NOMENCLATURE" : "SAHA NOTU · ADLANDIRMA"}</p>
+          <h3>{isEn ? "The story in its name" : "İsim hikâyesi"}</h3>
+        </div>
+      </div>
+      <p>{story ? (isEn ? story.en : story.tr) : (isEn ? "A verified origin note has not been added for this name yet. The scientific and local names are kept here as recorded; this note will be expanded when a reliable nomenclatural source is available." : "Bu ad için kaynakla doğrulanmış bir köken notu henüz eklenmedi. Bilimsel ve yerel adlar katalogdaki biçimiyle korunuyor; güvenilir bir adlandırma kaynağı bulunduğunda bu not genişletilecek.")}</p>
+      {story?.source && <a href={story.source} target="_blank" rel="noreferrer">{story.sourceLabel?.[isEn ? "en" : "tr"]} <span aria-hidden="true">↗</span></a>}
+    </section>
+  );
+}
+
+function BotanicalPlateArt() {
+  return (
+    <svg className="botanical-plate-art" viewBox="0 0 260 300" fill="none" aria-hidden="true">
+      <g className="plate-ink" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M127 279C123 229 125 185 137 137c9-36 25-72 49-112" />
+        <path d="M129 242c-45 0-75-22-91-65 43 1 74 22 91 65Z" />
+        <path d="M130 213c-28-25-47-57-55-93M134 178c-19-19-31-42-38-68M147 145c-10-19-16-40-17-62" />
+        <path d="M137 180c-2-42 17-74 57-96 2 41-17 73-57 96Z" />
+        <path d="M151 132c-39-5-66-27-80-67 38 6 65 28 80 67Z" />
+        <path d="M166 99c-1-35 14-62 45-82 2 34-13 61-45 82Z" />
+        <path d="M126 238c-26-22-43-48-50-79M154 160c-1-20 4-38 15-54M169 93c-8-15-13-31-13-48" />
+        <path d="M117 281h27M104 289h45" />
+        <circle cx="186" cy="42" r="3" /><circle cx="68" cy="69" r="2.5" /><circle cx="196" cy="88" r="2.5" />
+      </g>
+      <g className="plate-guides" stroke="currentColor" strokeWidth=".7">
+        <path d="M22 30h32M22 30v28M235 241h-26M235 241v-26M33 270h18M33 270v-16" />
+      </g>
+    </svg>
+  );
+}
+
+function CatalogStats({ lang, onSelectRegion }: { lang: string; onSelectRegion: (id: string) => void }) {
+  const isEn = lang === "en";
+  const regionCounts = Object.keys(regions).map(id => ({
+    id,
+    label: regionName(lang, id),
+    count: plants.filter(p => p.regionId === id).length,
+  }));
+  const maxCount = Math.max(...regionCounts.map(item => item.count), 1);
+  const records = plants.length;
+  const uniqueNames = new Set(plants.map(p => p.scientificName)).size;
+  const provinceCount = new Set(plants.map(p => p.provinceId).filter(Boolean)).size;
+  const endemicTagged = plants.filter(p => /endemik/i.test(p.status)).length;
+  const stats = [
+    { value: records, label: isEn ? "catalog records" : "katalog kaydı" },
+    { value: uniqueNames, label: isEn ? "distinct scientific names" : "farklı bilimsel ad" },
+    { value: provinceCount, label: isEn ? "provinces represented" : "ilde kaydı bulunan" },
+    { value: endemicTagged, label: isEn ? "records tagged endemic" : "endemik ibareli kayıt" },
+  ];
+  return (
+    <section className="catalog-statistics" aria-labelledby="catalog-stats-title">
+      <div className="catalog-stats-head">
+        <div>
+          <p className="catalog-eyebrow">{isEn ? "ETNOHERBA · CATALOG SNAPSHOT" : "ETNOHERBA · KATALOG ÖZETİ"}</p>
+          <h2 id="catalog-stats-title">{isEn ? "Anatolian flora, in numbers" : "Sayılarla Anadolu Florası"}</h2>
+          <p>{isEn ? "A living view of the records currently collected in the Etnoherba catalog." : "Etnoherba kataloğunda şu anda derlenen kayıtların görünümü."}</p>
+        </div>
+        <span className="catalog-region-total"><b>{Object.keys(regions).length}</b><small>{isEn ? "regions" : "coğrafi bölge"}</small></span>
+      </div>
+      <div className="catalog-stat-grid">
+        {stats.map((item, index) => <div key={item.label} className="catalog-stat" style={{ "--stat-delay": `${index * 90}ms` } as CSSProperties}>
+          <strong>{item.value.toLocaleString(lang === "en" ? "en-US" : "tr-TR")}</strong><span>{item.label}</span>
+        </div>)}
+      </div>
+      <div className="catalog-regions">
+        <h3>{isEn ? "Records by region" : "Bölgelere göre kayıtlar"}</h3>
+        <div className="catalog-bars">
+          {regionCounts.map((item, index) => <button key={item.id} type="button" className="catalog-bar-row" onClick={() => onSelectRegion(item.id)} title={isEn ? `Open ${item.label} on the map` : `${item.label} haritasını aç`}>
+            <span className="catalog-bar-name">{item.label}</span>
+            <span className="catalog-bar-track"><i style={{ "--bar-width": `${(item.count / maxCount) * 100}%`, "--bar-delay": `${index * 70}ms` } as CSSProperties} /></span>
+            <b>{item.count}</b>
+          </button>)}
+        </div>
+      </div>
+      <p className="catalog-footnote">{isEn ? "Counts describe the current Etnoherba catalog, not the complete flora of Türkiye. ‘Endemic’ is counted from the wording of the catalog status field." : "Sayılar mevcut Etnoherba kataloğunu gösterir; Türkiye florasının tamamını temsil etmez. ‘Endemik’ sayısı, katalogdaki durum etiketinde bu sözcük geçen kayıtların toplamıdır."}</p>
+    </section>
   );
 }
 
@@ -85,11 +195,15 @@ function ImportedHeaderETNOHERBA() {
 }
 
 const FULL_VIEWBOX = "0 0 1566 783";
-/** Adds breathing room around a region so border provinces are never clipped. */
-function padViewBox(vb: string | undefined, pad = 0.06): string {
+/** A restrained regional close-up; the pan control reveals either edge. */
+function regionViewBox(vb: string | undefined, pan: number): string {
   if (!vb) return FULL_VIEWBOX;
   const [x = 0, y = 0, w = 1566, h = 783] = vb.split(/[\s,]+/).map(Number);
-  return `${x - w * pad} ${y - h * pad} ${w * (1 + pad * 2)} ${h * (1 + pad * 2)}`;
+  const zoom = 1.035;
+  const viewW = w / zoom, viewH = h / zoom;
+  const left = x + (w - viewW) * Math.max(0, Math.min(100, pan)) / 100;
+  const top = y + (h - viewH) / 2;
+  return `${left.toFixed(2)} ${top.toFixed(2)} ${viewW.toFixed(2)} ${viewH.toFixed(2)}`;
 }
 /** Smoothly tweens the SVG viewBox for a camera-like zoom between regions. */
 function useAnimatedViewBox(target: string, duration = 750): string {
@@ -118,7 +232,9 @@ function ImportedSectionTRkiyeEtnobotanikHaritas() {
   const { state, update } = useHerb();
   const plant = plants.find(p => p.id === state.plant) ?? plants[0];
   const tr = (key: string) => translate(state.lang, key);
-  const viewBox = useAnimatedViewBox(state.region ? padViewBox(regions[state.region]?.viewBox) : FULL_VIEWBOX);
+  const [pan, setPan] = useState(50);
+  useEffect(() => setPan(50), [state.region]);
+  const viewBox = useAnimatedViewBox(state.region ? regionViewBox(regions[state.region]?.viewBox, pan) : FULL_VIEWBOX);
   if (!plant) return null;
   return (
     <section className={"\x73pace-y-6".replace("hidden", "") + (state.view === "map-view" ? "" : " hidden")} id="map-view">
@@ -685,6 +801,15 @@ function ImportedSectionTRkiyeEtnobotanikHaritas() {
         </div>
         <div className={"[&]:pointer-events-none [&]:absolute [inset:0px] [z-index:30]"} id="markers-layer" />
       </div>
+      {state.region && (
+        <div className="map-pan-controls">
+          <label htmlFor="map-pan">{state.lang === "en" ? "Pan the regional map" : "Bölge haritasını yana kaydır"}</label>
+          <input id="map-pan" type="range" min="0" max="100" value={pan} onChange={e => setPan(Number(e.target.value))} aria-label={state.lang === "en" ? "Pan map left or right" : "Haritayı sola veya sağa kaydır"} />
+          <span className="pan-end pan-left">← {state.lang === "en" ? "West" : "Batı"}</span>
+          <button type="button" className="pan-center" onClick={() => setPan(50)}>{state.lang === "en" ? "Center" : "Ortala"}</button>
+          <span className="pan-end pan-right">{state.lang === "en" ? "East" : "Doğu"} →</span>
+        </div>
+      )}
       <div className={"grid grid-cols-1 \x6dd:\x67rid-cols-3 gap-4 reveal is-visible reveal-scale is-visible"}>
         <div className={"\x62g-white rounded-3xl p-6 \x73hadow-sm \x62order \x62order-slate-200 \x73pace-y-3 reveal is-visible [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)]"} style={{ "--rd": "0ms" } as CSSProperties}>
           <div className={"w-12 h-12 rounded-2xl \x62g-emerald-100 text-emerald-700 flex \x74ext-xl reveal-icon [&]:items-center [&]:justify-center"}>
@@ -705,34 +830,10 @@ function ImportedSectionTRkiyeEtnobotanikHaritas() {
             <i className="fa-solid fa-seedling" />
           </div>
           <h3 className={"\x66ont-serif \x74ext-lg \x66ont-bold text-botanical-950 is-visible"}>{tr("about.whyTitle")}</h3>
-          <p className={"\x74ext-sm text-slate-600 \x6ceading-relaxed reveal-text is-visible"} style={{ "--td": "90ms" } as CSSProperties}>Türkiye, Avrupa'nın en zengin bitki çeşitliliğine sahip ülkelerinden biridir. <strong>12.000'den fazla bitki türünün</strong> yaklaşık 3.000'i endemiktir. Bu mirası korumak ve tanıtmak hepimizin görevidir.</p>
+          <p className={"\x74ext-sm text-slate-600 \x6ceading-relaxed reveal-text is-visible"} style={{ "--td": "90ms" } as CSSProperties}>Etnoherba, Anadolu’nun bitki çeşitliliğini harita, herbaryum kayıtları ve botanik anlatılarla keşfetmeye açar.</p>
         </div>
       </div>
-      <div className={"\x62g-gradient-to-br \x66rom-botanical-900 \x74o-botanical-950 rounded-3xl p-6 \x6dd:\x70-8 text-white \x73hadow-lg reveal is-visible reveal-scale is-visible [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)]"}>
-        <div className="text-center mb-6">
-          <h2 className={"\x66ont-serif \x74ext-2xl \x6dd:\x74ext-3xl \x66ont-bold is-visible"}>{tr("stats.title")}</h2>
-          <p className={"text-emerald-300 \x74ext-sm mt-1 reveal-text is-visible"} style={{ "--td": "155ms" } as CSSProperties}>{tr("stats.subtitle")}</p>
-        </div>
-        <div className={"grid grid-cols-2 \x6dd:\x67rid-cols-4 gap-4"}>
-          <div className={"\x62g-white/\x310 rounded-2xl text-center \x62ackdrop-blur-sm reveal is-visible [padding:1rem]"} style={{ "--rd": "0ms" } as CSSProperties}>
-            <div className={"\x74ext-3xl \x6dd:\x74ext-4xl \x66ont-bold text-emerald-300"}>~12.000</div>
-            <div className={"\x74ext-xs \x6dd:\x74ext-sm text-slate-300 mt-1"}>{tr("stats.species")}</div>
-          </div>
-          <div className={"\x62g-white/\x310 rounded-2xl text-center \x62ackdrop-blur-sm reveal is-visible [padding:1rem]"} style={{ "--rd": "100ms" } as CSSProperties}>
-            <div className={"\x74ext-3xl \x6dd:\x74ext-4xl \x66ont-bold text-emerald-300"}>~3.000</div>
-            <div className={"\x74ext-xs \x6dd:\x74ext-sm text-slate-300 mt-1"}>{tr("stats.endemic")}</div>
-          </div>
-          <div className={"\x62g-white/\x310 rounded-2xl text-center \x62ackdrop-blur-sm reveal is-visible [padding:1rem]"} style={{ "--rd": "200ms" } as CSSProperties}>
-            <div className={"\x74ext-3xl \x6dd:\x74ext-4xl \x66ont-bold text-emerald-300"}>7</div>
-            <div className={"\x74ext-xs \x6dd:\x74ext-sm text-slate-300 mt-1"}>{tr("stats.regions")}</div>
-          </div>
-          <div className={"\x62g-white/\x310 rounded-2xl text-center \x62ackdrop-blur-sm reveal is-visible [padding:1rem]"} style={{ "--rd": "300ms" } as CSSProperties}>
-            <div className={"\x74ext-3xl \x6dd:\x74ext-4xl \x66ont-bold text-emerald-300"} id="stat-endemism-val">%33</div>
-            <div className={"\x74ext-xs \x6dd:\x74ext-sm text-slate-300 mt-1"}>{tr("stats.rate")}</div>
-          </div>
-        </div>
-        <p className={"text-center \x74ext-xs text-slate-400 mt-5 italic reveal-text is-visible"} style={{ "--td": "220ms" } as CSSProperties}><i className="fa-solid fa-info-circle mr-1" /> "Türkiye, Avrupa kıtasının tamamında bulunan bitki türü sayısına neredeyse eşit bir zenginliğe sahiptir."</p>
-      </div>
+      <CatalogStats lang={state.lang} onSelectRegion={(id) => { update({ region: id, province: "" }); document.getElementById("map-view")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
       <div className={"\x62g-white rounded-3xl p-6 \x6dd:\x70-8 \x73hadow-sm \x62order \x62order-slate-200 reveal is-visible reveal-scale is-visible [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)]"}>
         <div className="text-center mb-6">
           <h2 className={"\x66ont-serif \x74ext-2xl \x66ont-bold text-botanical-950 is-visible"}>{tr("guide.title")}</h2>
@@ -779,10 +880,8 @@ function ImportedSectionKazdaGKnar() {
       </div>
       <div className={"\x62g-white rounded-3xl \x62order \x62order-slate-200 \x73hadow-xl reveal is-visible reveal-scale [animation:0.5s_ease-in-out_0s_1_normal_none_running_fadeIn] [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] [overflow:hidden]"}>
         <div className={"\x62g-gradient-to-r \x66rom-botanical-950 \x74o-botanical-800 text-white p-6 \x6dd:\x70-10 [&]:relative"} id="page-hero-bg">
-          <div className={"right-4 opacity-10 \x74ext-8xl [&]:absolute [top:1rem]"}>
-            <i className="fa-solid fa-leaf" />
-          </div>
-          <div className={"\x73pace-y-2 [&]:relative [max-width:56rem] [z-index:10]"}>
+          <BotanicalPlateArt />
+        <div className={"\x73pace-y-2 [&]:relative [max-width:56rem] [z-index:10]"}>
             <div className={"flex flex-wrap [&]:items-center [gap:0.5rem]"}><span className={"\x70x-3 \x70y-1 rounded-full \x62g-white/\x320 text-white \x74ext-xs \x66ont-bold [letter-spacing:0.05em]"} id="page-region-tag">{regionName(state.lang, plant.regionId) + " • " + (plant.provinceName ?? "")}</span><span className={"\x70x-3 \x70y-1 rounded-full \x62g-emerald-500/\x330 text-emerald-200 \x74ext-xs \x66ont-semibold"} id="page-status-tag">{plantText(plant, state.lang, "status")}</span><span className={"\x70x-3 \x70y-1 rounded-full \x74ext-xs \x66ont-bold"} id="page-cons-tag" /></div>
             <h1 className={"\x66ont-serif \x74ext-3xl \x6dd:\x74ext-5xl \x66ont-bold [letter-spacing:0.025em]"} id="page-turkish-name">{plantText(plant, state.lang, "name")}</h1>
             <p className={"\x66ont-serif italic \x74ext-lg \x6dd:\x74ext-2xl text-emerald-200 reveal-text"} style={{ "--td": "285ms" } as CSSProperties} id="page-scientific-name">{plant.scientificName}</p>
@@ -791,11 +890,7 @@ function ImportedSectionKazdaGKnar() {
         <div className={"p-6 \x6dd:\x70-10 grid grid-cols-1 \x6cg:\x67rid-cols-3 [gap:2rem]"}>
           <div className={"\x73pace-y-6 reveal is-visible [@media(min-width:1024px)]:[grid-column:span_2/span_2]"} style={{ "--rd": "0ms" } as CSSProperties}>
             <PlantGallery />
-            <div className={"\x62g-slate-50 p-6 rounded-2xl \x62order \x62order-slate-200 \x73pace-y-2"}>
-              <h3 className={"\x66ont-serif \x74ext-lg \x66ont-bold text-slate-900 flex \x73pace-x-2 [&]:items-center"}><i className="fa-solid fa-mortar-pestle text-emerald-600" /><span>{tr("plant.usesTitle")}</span></h3>
-              <div className={"grid grid-cols-1 \x73m:\x67rid-cols-2 [gap:0.75rem] [padding-bottom:0.25rem] [padding-top:0.5rem]"} id="page-use-cards" />
-              <p className={"text-slate-700 \x6ceading-relaxed \x74ext-sm \x6dd:\x74ext-base reveal-text"} style={{ "--td": "155ms" } as CSSProperties} id="page-uses">{plantText(plant, state.lang, "uses")}</p>
-            </div>
+            <NameStory plant={plant} lang={state.lang} />
             <div className={"\x62g-white p-6 rounded-2xl \x62order \x62order-slate-200 \x73pace-y-2"}>
               <h3 className={"\x66ont-serif \x74ext-lg \x66ont-bold text-slate-900 flex \x73pace-x-2 [&]:items-center"}><i className="fa-solid fa-leaf text-emerald-600" /><span>{tr("plant.botanyTitle")}</span></h3>
               <p className={"text-slate-700 \x6ceading-relaxed \x74ext-sm \x6dd:\x74ext-base reveal-text"} style={{ "--td": "220ms" } as CSSProperties} id="page-description">{plantText(plant, state.lang, "description")}</p>
@@ -804,10 +899,7 @@ function ImportedSectionKazdaGKnar() {
               <h3 className={"\x66ont-serif \x74ext-lg \x66ont-bold text-slate-900 flex \x73pace-x-2 [&]:items-center"}><i className="fa-solid fa-mountain-sun text-emerald-600" /><span>{tr("plant.habitatTitle")}</span></h3>
               <p className={"text-slate-700 \x6ceading-relaxed \x74ext-sm \x6dd:\x74ext-base reveal-text"} style={{ "--td": "285ms" } as CSSProperties} id="page-habitat">{plantText(plant, state.lang, "habitat")}</p>
             </div>
-            <div className={"\x62g-emerald-50/\x350 p-6 rounded-2xl \x62order \x62order-emerald-200 \x73pace-y-2"}>
-              <h3 className={"\x66ont-serif \x74ext-base \x66ont-bold text-emerald-950 flex \x73pace-x-2 [&]:items-center"}><i className="fa-solid fa-flask text-emerald-700" /><span>{tr("plant.notesTitle")}</span></h3>
-              <p className={"text-emerald-900 \x6ceading-relaxed \x74ext-sm reveal-text"} style={{ "--td": "90ms" } as CSSProperties} id="page-notes">{plantText(plant, state.lang, "activeCompounds")}</p>
-            </div>
+            
           </div>
           <div className={"\x73pace-y-6 reveal is-visible"} style={{ "--rd": "100ms" } as CSSProperties}>
             <div className={"\x62g-white p-6 rounded-3xl \x62order \x62order-slate-200 \x73hadow-sm \x73pace-y-3 [box-shadow:var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)]"}>
@@ -990,7 +1082,18 @@ function PlantGallery() {
  const gallery = (photos[state.plant] ?? []).filter(p => media[p.src]);
  const photo = gallery[state.photo % Math.max(1,gallery.length)];
  if (!photo) return <div id="plant-gallery" className="gallery-unavailable">{state.lang === 'en' ? 'Photo unavailable' : 'Fotoğraf bulunamadı'}</div>;
- return <div id="plant-gallery"><div className="gallery-stage"><img id="gallery-main" src={media[photo.src]} alt={plantText(plant,state.lang,'name')} /><button className="gallery-prev" aria-label="Önceki fotoğraf" onClick={() => update({photo:(state.photo+gallery.length-1)%gallery.length})}><i className="fa-solid fa-chevron-left" /></button><button className="gallery-next" aria-label="Sonraki fotoğraf" onClick={() => update({photo:(state.photo+1)%gallery.length})}><i className="fa-solid fa-chevron-right" /></button><span className="gallery-count">{state.photo+1}/{gallery.length}</span></div><div className="gallery-thumbs">{gallery.map((p,i) => <button key={p.src} aria-label={`${i+1}. fotoğraf`} onClick={() => update({photo:i})}><img src={media[p.src]} alt={plantText(plant,state.lang,'name')} /></button>)}</div><p className="gallery-credit"><a href={photo.page} target="_blank" rel="noreferrer">© {photo.credit} · {photo.license}</a></p></div>;
+ return <div id="plant-gallery" className="specimen-gallery">
+  <div className="gallery-stage">
+    <img key={photo.src} id="gallery-main" src={media[photo.src]} alt={plantText(plant,state.lang,'name')} />
+    <svg className="gallery-engraving" viewBox="0 0 120 160" fill="none" aria-hidden="true"><g stroke="currentColor" strokeWidth="1" strokeLinecap="round"><path d="M61 145c-3-31 2-61 17-92M59 128c-22-2-36-15-41-39 22 3 35 15 41 39Zm3-23c-2-24 8-42 30-55 2 23-8 41-30 55Zm6-31c-19-3-32-14-39-34 18 2 31 13 39 34Zm9-17c0-17 8-29 23-38 1 16-7 29-23 38Z"/></g></svg>
+    <button className="gallery-prev" aria-label={state.lang === 'en' ? 'Previous photo' : 'Önceki fotoğraf'} onClick={() => update({photo:(state.photo+gallery.length-1)%gallery.length})}><i className="fa-solid fa-chevron-left" /></button>
+    <button className="gallery-next" aria-label={state.lang === 'en' ? 'Next photo' : 'Sonraki fotoğraf'} onClick={() => update({photo:(state.photo+1)%gallery.length})}><i className="fa-solid fa-chevron-right" /></button>
+    <span className="gallery-count">{state.photo+1}/{gallery.length}</span>
+  </div>
+  <div className="specimen-caption"><span>{state.lang === 'en' ? 'FIELD PLATE' : 'BOTANİK LEVHASI'}</span><b>{plant ? plantText(plant,state.lang,'name') : ''}</b><i>{plant?.scientificName}</i><small>{plant?.provinceName} · {plant?.id.toUpperCase()}</small></div>
+  <div className="gallery-thumbs">{gallery.map((p,i) => <button key={p.src} aria-label={`${state.lang === 'en' ? 'Photo' : 'Fotoğraf'} ${i+1}`} onClick={() => update({photo:i})}><img src={media[p.src]} alt={plant ? plantText(plant,state.lang,'name') : ''} /></button>)}</div>
+  <p className="gallery-credit"><a href={photo.page} target="_blank" rel="noreferrer">© {photo.credit} · {photo.license}</a></p>
+ </div>;
 }
 function QrCode({id,size}: {id:string;size:number}) {
  const [origin,setOrigin] = useState('');
